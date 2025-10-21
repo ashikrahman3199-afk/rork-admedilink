@@ -48,16 +48,16 @@ export default function ProfileScreen() {
       items: [
         { id: '2', label: 'Personal Information', icon: User, onPress: () => console.log('Personal Info') },
         { id: '3', label: 'Company Details', icon: Building2, onPress: () => console.log('Company') },
-        { id: '4', label: 'Notification Settings', icon: Bell, onPress: () => console.log('Notifications') },
-        { id: '5', label: 'App Preferences', icon: Settings, onPress: () => console.log('Preferences') },
+        { id: '4', label: 'Notification Settings', icon: Bell, onPress: () => router.push('/settings') },
+        { id: '5', label: 'App Preferences', icon: Settings, onPress: () => router.push('/settings') },
       ],
     },
     {
       title: 'Support',
       items: [
-        { id: '6', label: 'Help Center', icon: HelpCircle, onPress: () => console.log('Help') },
-        { id: '7', label: 'Terms of Service', icon: FileText, onPress: () => console.log('Terms') },
-        { id: '8', label: 'Privacy Policy', icon: Shield, onPress: () => console.log('Privacy') },
+        { id: '6', label: 'Help Center', icon: HelpCircle, onPress: () => router.push('/help-center') },
+        { id: '7', label: 'Terms of Service', icon: FileText, onPress: () => router.push('/terms') },
+        { id: '8', label: 'Privacy Policy', icon: Shield, onPress: () => router.push('/privacy') },
       ],
     },
   ];

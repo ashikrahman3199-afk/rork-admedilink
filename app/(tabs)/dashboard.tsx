@@ -8,7 +8,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
-import { TrendingUp, Eye, Target, Users, Calendar, DollarSign, User, Settings } from 'lucide-react-native';
+import { TrendingUp, Eye, Target, Users, Calendar, DollarSign, User, Settings, Clock } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 
@@ -16,9 +16,9 @@ const { width } = Dimensions.get('window');
 
 export default function DashboardScreen() {
   const router = useRouter();
-  const { campaigns } = useApp();
+  const { bookings } = useApp();
 
-
+  const recentBookings = bookings.slice(0, 3);
 
   const stats = [
     { id: '1', label: 'Reach', value: '4.5M', change: '+12%', icon: Users, color: Colors.primary },
@@ -32,6 +32,21 @@ export default function DashboardScreen() {
     { id: '2', name: 'Brand Awareness Q1', status: 'active', reach: '1.8M', budget: '₹50,000', daysLeft: 25 },
     { id: '3', name: 'Product Launch', status: 'completed', reach: '3.2M', budget: '₹1,20,000', daysLeft: 0 },
   ];
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active':
+        return Colors.success;
+      case 'completed':
+        return Colors.info;
+      case 'pending':
+        return Colors.accent;
+      case 'cancelled':
+        return Colors.error;
+      default:
+        return Colors.text.tertiary;
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -50,7 +65,7 @@ export default function DashboardScreen() {
           headerRight: () => (
             <TouchableOpacity 
               style={styles.headerButton}
-              onPress={() => console.log('Settings')}
+              onPress={() => router.push('/settings')}
             >
               <Settings size={24} color={Colors.primary} />
             </TouchableOpacity>
@@ -63,9 +78,80 @@ export default function DashboardScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentContainer}
       >
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Campaign Overview</Text>
-          <Text style={styles.headerSubtitle}>Track your advertising performance</Text>
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Recent Bookings</Text>
+            <TouchableOpacity onPress={() => router.push('/bookings')}>
+              <Text style={styles.seeAllText}>View All</Text>
+            </TouchableOpacity>
+          </View>
+
+          {recentBookings.length > 0 ? (
+            recentBookings.map(booking => (
+              <TouchableOpacity 
+                key={booking.id} 
+                style={styles.bookingCard}
+                onPress={() => router.push('/bookings')}
+              >
+                <View style={styles.bookingHeader}>
+                  <View style={styles.bookingInfo}>
+                    <Text style={styles.bookingName}>{booking.campaignName}</Text>
+                    <View style={[
+                      styles.bookingStatusBadge,
+                      { backgroundColor: `${getStatusColor(booking.status)}15` }
+                    ]}>
+                      <Text style={[
+                        styles.bookingStatusText,
+                        { color: getStatusColor(booking.status) }
+                      ]}>
+                        {booking.status}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={styles.bookingAmount}>₹{booking.amount.toLocaleString('en-IN')}</Text>
+                </View>
+
+                <View style={styles.bookingDetails}>
+                  <View style={styles.bookingDetailRow}>
+                    <Calendar size={14} color={Colors.text.secondary} />
+                    <Text style={styles.bookingDetailText}>
+                      {new Date(booking.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} - {new Date(booking.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                    </Text>
+                  </View>
+                  <View style={styles.bookingDetailRow}>
+                    <Clock size={14} color={Colors.text.secondary} />
+                    <Text style={styles.bookingDetailText}>
+                      Order: {new Date(booking.orderDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.bookingServices}>
+                  {booking.services.slice(0, 3).map((service, idx) => (
+                    <View key={idx} style={styles.serviceTag}>
+                      <Text style={styles.serviceTagText}>{service}</Text>
+                    </View>
+                  ))}
+                  {booking.services.length > 3 && (
+                    <View style={styles.serviceTag}>
+                      <Text style={styles.serviceTagText}>+{booking.services.length - 3}</Text>
+                    </View>
+                  )}
+                </View>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <Calendar size={48} color={Colors.text.tertiary} />
+              <Text style={styles.emptyStateText}>No bookings yet</Text>
+              <TouchableOpacity 
+                style={styles.emptyStateButton}
+                onPress={() => router.push('/(tabs)/home')}
+              >
+                <Text style={styles.emptyStateButtonText}>Browse Services</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         <View style={styles.statsGrid}>
@@ -196,24 +282,122 @@ const styles = StyleSheet.create({
   contentContainer: {
     padding: 16,
   },
-  header: {
+  section: {
     marginBottom: 24,
   },
-  headerTitle: {
-    fontSize: 28,
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 20,
     fontWeight: '700' as const,
     color: Colors.text.primary,
-    marginBottom: 4,
   },
-  headerSubtitle: {
+  seeAllText: {
     fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.primary,
+  },
+  bookingCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    ...Colors.shadow.small,
+  },
+  bookingHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  bookingInfo: {
+    flex: 1,
+    gap: 8,
+  },
+  bookingName: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: Colors.text.primary,
+  },
+  bookingStatusBadge: {
+    alignSelf: 'flex-start' as const,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  bookingStatusText: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+    textTransform: 'capitalize' as const,
+  },
+  bookingAmount: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: Colors.primary,
+  },
+  bookingDetails: {
+    gap: 8,
+    marginBottom: 12,
+  },
+  bookingDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  bookingDetailText: {
+    fontSize: 13,
     color: Colors.text.secondary,
+  },
+  bookingServices: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  serviceTag: {
+    backgroundColor: `${Colors.primary}15`,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  serviceTagText: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+    color: Colors.primary,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 32,
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    ...Colors.shadow.small,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: Colors.text.secondary,
+    marginTop: 16,
+    marginBottom: 16,
+  },
+  emptyStateButton: {
+    backgroundColor: Colors.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+  },
+  emptyStateButtonText: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: Colors.text.inverse,
   },
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
-    marginBottom: 32,
+    marginBottom: 24,
   },
   statCard: {
     width: (width - 44) / 2,
@@ -249,25 +433,6 @@ const styles = StyleSheet.create({
   statChangeText: {
     fontSize: 12,
     fontWeight: '600' as const,
-  },
-  section: {
-    marginBottom: 32,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700' as const,
-    color: Colors.text.primary,
-  },
-  seeAllText: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: Colors.primary,
   },
   campaignCard: {
     backgroundColor: Colors.surface,

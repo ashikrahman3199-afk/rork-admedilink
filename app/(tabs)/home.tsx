@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TextInput,
   TouchableOpacity,
   Image,
   Dimensions,
@@ -17,10 +16,16 @@ import {
   Search,
   MapPin,
   Bell,
-  Plus,
   Star,
   TrendingUp,
   Sparkles,
+  Monitor,
+  Newspaper,
+  Radio,
+  Film,
+  Users as UsersIcon,
+  Eye,
+  Calendar,
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { adSpaces, categories, AdCategory } from '@/constants/adSpaces';
@@ -32,22 +37,21 @@ const CARD_WIDTH = width - 48;
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { addToCart, cartItemCount, unreadNotificationCount, selectedLocation } = useApp();
-  const [selectedCategory, setSelectedCategory] = useState<AdCategory | 'all'>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const { unreadNotificationCount, selectedLocation } = useApp();
+  const [selectedCategory, setSelectedCategory] = useState<AdCategory | 'all' | 'events'>('all');
 
   const filteredSpaces = adSpaces.filter(space => {
     const matchesCategory = selectedCategory === 'all' || space.category === selectedCategory;
-    const matchesSearch = space.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         space.location.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    return matchesCategory;
   });
 
   const hotPicks = adSpaces.filter(space => space.rating >= 4.7).slice(0, 3);
-
-  const handleAddToCart = (space: typeof adSpaces[0]) => {
-    addToCart(space, 1);
-  };
+  
+  const whatsNew = [
+    { id: '1', title: 'Premium Billboard - MG Road', type: 'New Launch', image: 'https://images.unsplash.com/photo-1567550009969-c1fa9a26b8c6?w=800&h=600' },
+    { id: '2', title: 'Create Custom Bundle', type: 'Service', route: '/custom-bundle', image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600' },
+    { id: '3', title: 'Digital Display - VR Mall', type: 'Hot Deal', image: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&h=600' },
+  ];
 
   return (
     <View style={styles.container}>
@@ -65,31 +69,28 @@ export default function HomeScreen() {
             <MapPin size={20} color={Colors.text.inverse} />
             <Text style={styles.locationText}>{selectedLocation}</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.notificationButton}
-            onPress={() => router.push('/notifications')}
-          >
-            <Bell size={24} color={Colors.text.inverse} />
-            {unreadNotificationCount > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{unreadNotificationCount}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
+          <View style={styles.headerTopRight}>
+            <TouchableOpacity 
+              style={styles.searchIconButton}
+              onPress={() => console.log('Search')}
+            >
+              <Search size={22} color={Colors.text.inverse} />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.notificationButton}
+              onPress={() => router.push('/notifications')}
+            >
+              <Bell size={22} color={Colors.text.inverse} />
+              {unreadNotificationCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{unreadNotificationCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
 
         <Text style={styles.headerTitle}>Find Perfect{'\n'}Ad Spaces</Text>
-
-        <View style={styles.searchContainer}>
-          <Search size={20} color={Colors.text.secondary} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search billboards, media..."
-            placeholderTextColor={Colors.text.tertiary}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
       </LinearGradient>
 
       <ScrollView
@@ -97,6 +98,39 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentContainer}
       >
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>What&apos;s New</Text>
+            <TouchableOpacity>
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.whatsNewContainer}
+          >
+            {whatsNew.map(item => (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.whatsNewCard}
+                onPress={() => item.route ? router.push(item.route as any) : console.log('View:', item.id)}
+              >
+                <Image source={{ uri: item.image }} style={styles.whatsNewImage} />
+                <LinearGradient
+                  colors={['transparent', 'rgba(0,0,0,0.9)']}
+                  style={styles.whatsNewGradient}
+                >
+                  <View style={styles.whatsNewBadge}>
+                    <Text style={styles.whatsNewBadgeText}>{item.type}</Text>
+                  </View>
+                  <Text style={styles.whatsNewTitle}>{item.title}</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Categories</Text>
@@ -107,44 +141,110 @@ export default function HomeScreen() {
             contentContainerStyle={styles.categoriesContainer}
           >
             <TouchableOpacity
-              style={[
-                styles.categoryCard,
-                selectedCategory === 'all' && styles.categoryCardActive,
-              ]}
+              style={styles.categoryCard}
               onPress={() => setSelectedCategory('all')}
             >
-              <View style={styles.categoryIconContainer}>
-                <TrendingUp size={24} color={selectedCategory === 'all' ? Colors.primary : Colors.text.secondary} />
+              <View style={[
+                styles.categoryIconCircle,
+                selectedCategory === 'all' && styles.categoryIconCircleActive,
+              ]}>
+                <TrendingUp size={28} color={selectedCategory === 'all' ? Colors.text.inverse : Colors.primary} />
               </View>
               <Text style={[
                 styles.categoryName,
                 selectedCategory === 'all' && styles.categoryNameActive,
               ]}>All</Text>
             </TouchableOpacity>
-            {categories.map(category => (
-              <TouchableOpacity
-                key={category.id}
-                style={[
-                  styles.categoryCard,
-                  selectedCategory === category.id && styles.categoryCardActive,
-                ]}
-                onPress={() => setSelectedCategory(category.id)}
-              >
-                <View style={styles.categoryIconContainer}>
-                  <Text style={styles.categoryEmoji}>
-                    {category.id === 'billboards' ? '📊' :
-                     category.id === 'print' ? '📰' :
-                     category.id === 'digital' ? '📱' :
-                     category.id === 'radio' ? '📻' :
-                     category.id === 'cinema' ? '🎬' : '👥'}
-                  </Text>
-                </View>
-                <Text style={[
-                  styles.categoryName,
-                  selectedCategory === category.id && styles.categoryNameActive,
-                ]}>{category.name}</Text>
-              </TouchableOpacity>
-            ))}
+            <TouchableOpacity
+              style={styles.categoryCard}
+              onPress={() => setSelectedCategory('billboards')}
+            >
+              <View style={[
+                styles.categoryIconCircle,
+                selectedCategory === 'billboards' && styles.categoryIconCircleActive,
+              ]}>
+                <Monitor size={28} color={selectedCategory === 'billboards' ? Colors.text.inverse : Colors.primary} />
+              </View>
+              <Text style={[
+                styles.categoryName,
+                selectedCategory === 'billboards' && styles.categoryNameActive,
+              ]}>Billboards</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.categoryCard}
+              onPress={() => setSelectedCategory('print')}
+            >
+              <View style={[
+                styles.categoryIconCircle,
+                selectedCategory === 'print' && styles.categoryIconCircleActive,
+              ]}>
+                <Newspaper size={28} color={selectedCategory === 'print' ? Colors.text.inverse : Colors.primary} />
+              </View>
+              <Text style={[
+                styles.categoryName,
+                selectedCategory === 'print' && styles.categoryNameActive,
+              ]}>Print</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.categoryCard}
+              onPress={() => setSelectedCategory('digital')}
+            >
+              <View style={[
+                styles.categoryIconCircle,
+                selectedCategory === 'digital' && styles.categoryIconCircleActive,
+              ]}>
+                <Monitor size={28} color={selectedCategory === 'digital' ? Colors.text.inverse : Colors.primary} />
+              </View>
+              <Text style={[
+                styles.categoryName,
+                selectedCategory === 'digital' && styles.categoryNameActive,
+              ]}>Digital</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.categoryCard}
+              onPress={() => setSelectedCategory('radio')}
+            >
+              <View style={[
+                styles.categoryIconCircle,
+                selectedCategory === 'radio' && styles.categoryIconCircleActive,
+              ]}>
+                <Radio size={28} color={selectedCategory === 'radio' ? Colors.text.inverse : Colors.primary} />
+              </View>
+              <Text style={[
+                styles.categoryName,
+                selectedCategory === 'radio' && styles.categoryNameActive,
+              ]}>Radio</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.categoryCard}
+              onPress={() => setSelectedCategory('cinema')}
+            >
+              <View style={[
+                styles.categoryIconCircle,
+                selectedCategory === 'cinema' && styles.categoryIconCircleActive,
+              ]}>
+                <Film size={28} color={selectedCategory === 'cinema' ? Colors.text.inverse : Colors.primary} />
+              </View>
+              <Text style={[
+                styles.categoryName,
+                selectedCategory === 'cinema' && styles.categoryNameActive,
+              ]}>Cinema</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.categoryCard}
+              onPress={() => setSelectedCategory('events')}
+            >
+              <View style={[
+                styles.categoryIconCircle,
+                selectedCategory === 'events' && styles.categoryIconCircleActive,
+              ]}>
+                <UsersIcon size={28} color={selectedCategory === 'events' ? Colors.text.inverse : Colors.primary} />
+              </View>
+              <Text style={[
+                styles.categoryName,
+                selectedCategory === 'events' && styles.categoryNameActive,
+              ]}>Events</Text>
+            </TouchableOpacity>
           </ScrollView>
         </View>
 
@@ -164,7 +264,7 @@ export default function HomeScreen() {
               <TouchableOpacity
                 key={space.id}
                 style={styles.hotPickCard}
-                onPress={() => console.log('View ad space:', space.id)}
+                onPress={() => router.push(`/service-detail?id=${space.id}`)}
               >
                 <Image source={{ uri: space.image }} style={styles.hotPickImage} />
                 <LinearGradient
@@ -178,11 +278,23 @@ export default function HomeScreen() {
                       <Text style={styles.hotPickLocation} numberOfLines={1}>{space.location}</Text>
                     </View>
                     <View style={styles.hotPickFooter}>
-                      <Text style={styles.hotPickPrice}>₹{(space.price / 1000).toFixed(0)}K/{space.priceUnit}</Text>
-                      <View style={styles.ratingContainer}>
-                        <Star size={12} color={Colors.accent} fill={Colors.accent} />
-                        <Text style={styles.ratingText}>{space.rating}</Text>
+                      <View style={styles.hotPickPriceRow}>
+                        <Text style={styles.hotPickPrice}>₹{(space.price / 1000).toFixed(0)}K/{space.priceUnit}</Text>
+                        <View style={styles.ratingContainer}>
+                          <Star size={12} color={Colors.accent} fill={Colors.accent} />
+                          <Text style={styles.ratingText}>{space.rating}</Text>
+                        </View>
                       </View>
+                      <TouchableOpacity 
+                        style={styles.viewBookButton}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          router.push(`/booking?serviceId=${space.id}`);
+                        }}
+                      >
+                        <Calendar size={14} color={Colors.text.inverse} />
+                        <Text style={styles.viewBookText}>Book</Text>
+                      </TouchableOpacity>
                     </View>
                   </View>
                 </LinearGradient>
@@ -202,7 +314,7 @@ export default function HomeScreen() {
             <TouchableOpacity
               key={space.id}
               style={styles.adSpaceCard}
-              onPress={() => console.log('View ad space:', space.id)}
+              onPress={() => router.push(`/service-detail?id=${space.id}`)}
             >
               <Image source={{ uri: space.image }} style={styles.adSpaceImage} />
               <View style={styles.adSpaceContent}>
@@ -223,15 +335,26 @@ export default function HomeScreen() {
                     <Text style={styles.adSpacePrice}>₹{space.price.toLocaleString('en-IN')}</Text>
                     <Text style={styles.adSpacePriceUnit}>per {space.priceUnit}</Text>
                   </View>
-                  <TouchableOpacity
-                    style={styles.addButton}
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      handleAddToCart(space);
-                    }}
-                  >
-                    <Plus size={20} color={Colors.text.inverse} />
-                  </TouchableOpacity>
+                  <View style={styles.adSpaceActions}>
+                    <TouchableOpacity
+                      style={styles.viewButton}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        router.push(`/service-detail?id=${space.id}`);
+                      }}
+                    >
+                      <Eye size={16} color={Colors.primary} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.bookButton}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        router.push(`/booking?serviceId=${space.id}`);
+                      }}
+                    >
+                      <Calendar size={16} color={Colors.text.inverse} />
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             </TouchableOpacity>
@@ -273,6 +396,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 24,
   },
+  headerTopRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  searchIconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   locationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -307,22 +443,7 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: '700' as const,
     color: Colors.text.inverse,
-    marginBottom: 20,
     lineHeight: 38,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: Colors.text.primary,
   },
   content: {
     flex: 1,
@@ -354,32 +475,67 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.text.secondary,
   },
+  whatsNewContainer: {
+    paddingHorizontal: 24,
+    gap: 16,
+  },
+  whatsNewCard: {
+    width: CARD_WIDTH * 0.75,
+    height: 180,
+    borderRadius: 20,
+    overflow: 'hidden',
+    ...Colors.shadow.medium,
+  },
+  whatsNewImage: {
+    width: '100%',
+    height: '100%',
+  },
+  whatsNewGradient: {
+    position: 'absolute' as const,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '70%',
+    justifyContent: 'flex-end',
+    padding: 16,
+  },
+  whatsNewBadge: {
+    alignSelf: 'flex-start' as const,
+    backgroundColor: Colors.accent,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginBottom: 8,
+  },
+  whatsNewBadgeText: {
+    fontSize: 11,
+    fontWeight: '700' as const,
+    color: Colors.text.primary,
+  },
+  whatsNewTitle: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: Colors.text.inverse,
+  },
   categoriesContainer: {
     paddingHorizontal: 24,
-    gap: 12,
+    gap: 16,
   },
   categoryCard: {
     alignItems: 'center',
     gap: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 16,
-    backgroundColor: Colors.surface,
-    ...Colors.shadow.small,
   },
-  categoryCardActive: {
-    backgroundColor: Colors.primary,
-  },
-  categoryIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: Colors.background,
+  categoryIconCircle: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: `${Colors.primary}15`,
     justifyContent: 'center',
     alignItems: 'center',
+    ...Colors.shadow.small,
   },
-  categoryEmoji: {
-    fontSize: 24,
+  categoryIconCircleActive: {
+    backgroundColor: Colors.primary,
   },
   categoryName: {
     fontSize: 12,
@@ -387,7 +543,7 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
   },
   categoryNameActive: {
-    color: Colors.text.inverse,
+    color: Colors.primary,
   },
   hotPicksContainer: {
     paddingHorizontal: 24,
@@ -395,7 +551,7 @@ const styles = StyleSheet.create({
   },
   hotPickCard: {
     width: CARD_WIDTH * 0.7,
-    height: 200,
+    height: 220,
     borderRadius: 20,
     overflow: 'hidden',
     ...Colors.shadow.medium,
@@ -409,7 +565,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: '60%',
+    height: '65%',
     justifyContent: 'flex-end',
     padding: 16,
   },
@@ -432,15 +588,33 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   hotPickFooter: {
+    marginTop: 8,
+    gap: 8,
+  },
+  hotPickPriceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 4,
   },
   hotPickPrice: {
     fontSize: 16,
     fontWeight: '700' as const,
     color: Colors.accent,
+  },
+  viewBookButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: Colors.primary,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+  },
+  viewBookText: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+    color: Colors.text.inverse,
   },
   ratingContainer: {
     flexDirection: 'row',
@@ -515,7 +689,19 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Colors.text.secondary,
   },
-  addButton: {
+  adSpaceActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  viewButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: `${Colors.primary}15`,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bookButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
