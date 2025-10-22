@@ -37,7 +37,7 @@ const CARD_WIDTH = width - 48;
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { unreadNotificationCount, selectedLocation } = useApp();
+  const { unreadNotificationCount, selectedLocation, addToCart } = useApp();
   const [selectedCategory, setSelectedCategory] = useState<AdCategory | 'all' | 'events'>('all');
 
   const filteredSpaces = adSpaces.filter(space => {
@@ -48,9 +48,10 @@ export default function HomeScreen() {
   const hotPicks = adSpaces.filter(space => space.rating >= 4.7).slice(0, 3);
   
   const whatsNew = [
-    { id: '1', title: 'Premium Billboard - MG Road', type: 'New Launch', image: 'https://images.unsplash.com/photo-1567550009969-c1fa9a26b8c6?w=800&h=600' },
-    { id: '2', title: 'Create Custom Bundle', type: 'Service', route: '/custom-bundle', image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600' },
-    { id: '3', title: 'Digital Display - VR Mall', type: 'Hot Deal', image: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&h=600' },
+    { id: 'custom-bundle', title: 'Create Custom Bundle', type: 'Service', route: '/custom-bundle', image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600', serviceId: null },
+    { id: '1', title: 'Premium Billboard - MG Road', type: 'New Launch', image: 'https://images.unsplash.com/photo-1567550009969-c1fa9a26b8c6?w=800&h=600', serviceId: '1' },
+    { id: '3', title: 'Digital Display - VR Mall', type: 'Hot Deal', image: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&h=600', serviceId: '6' },
+    { id: '4', title: 'Cinema Advertising Package', type: 'Featured', image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&h=600', serviceId: '8' },
   ];
 
   return (
@@ -72,7 +73,7 @@ export default function HomeScreen() {
           <View style={styles.headerTopRight}>
             <TouchableOpacity 
               style={styles.searchIconButton}
-              onPress={() => console.log('Search')}
+              onPress={() => router.push('/search' as any)}
             >
               <Search size={22} color={Colors.text.inverse} />
             </TouchableOpacity>
@@ -114,7 +115,13 @@ export default function HomeScreen() {
               <TouchableOpacity
                 key={item.id}
                 style={styles.whatsNewCard}
-                onPress={() => item.route ? router.push(item.route as any) : console.log('View:', item.id)}
+                onPress={() => {
+                  if (item.route) {
+                    router.push(item.route as any);
+                  } else if (item.serviceId) {
+                    router.push(`/service-detail?id=${item.serviceId}`);
+                  }
+                }}
               >
                 <Image source={{ uri: item.image }} style={styles.whatsNewImage} />
                 <LinearGradient
@@ -314,7 +321,10 @@ export default function HomeScreen() {
             <TouchableOpacity
               key={space.id}
               style={styles.adSpaceCard}
-              onPress={() => router.push(`/service-detail?id=${space.id}`)}
+              onPress={() => {
+                addToCart(space, 1);
+                router.push('/(tabs)/cart');
+              }}
             >
               <Image source={{ uri: space.image }} style={styles.adSpaceImage} />
               <View style={styles.adSpaceContent}>
@@ -344,15 +354,6 @@ export default function HomeScreen() {
                       }}
                     >
                       <Eye size={16} color={Colors.primary} />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.bookButton}
-                      onPress={(e) => {
-                        e.stopPropagation();
-                        router.push(`/booking?serviceId=${space.id}`);
-                      }}
-                    >
-                      <Calendar size={16} color={Colors.text.inverse} />
                     </TouchableOpacity>
                   </View>
                 </View>
