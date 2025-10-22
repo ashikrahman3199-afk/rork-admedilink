@@ -1,18 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  TextInput,
   TouchableOpacity,
   Image,
   Dimensions,
   ColorValue,
   Modal,
 } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Search,
   TrendingUp,
@@ -24,16 +24,28 @@ import {
   Radio,
   Film,
   Users as UsersIcon,
+  MapPin,
+  Bell,
+  ShoppingCart,
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { adSpaces, categories, AdCategory } from '@/constants/adSpaces';
+import { useApp } from '@/contexts/AppContext';
 
 const { width } = Dimensions.get('window');
 
 export default function ServicesScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const params = useLocalSearchParams();
+  const { selectedLocation, unreadNotificationCount, addToCart } = useApp();
   const [selectedCategory, setSelectedCategory] = useState<AdCategory | 'all'>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    if (params.category && typeof params.category === 'string') {
+      setSelectedCategory(params.category as AdCategory);
+    }
+  }, [params.category]);
   const [showCategoryMenu, setShowCategoryMenu] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [priceRange, setPriceRange] = useState<'all' | 'low' | 'medium' | 'high'>('all');
@@ -41,8 +53,6 @@ export default function ServicesScreen() {
 
   const filteredSpaces = adSpaces.filter(space => {
     const matchesCategory = selectedCategory === 'all' || space.category === selectedCategory;
-    const matchesSearch = space.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         space.location.toLowerCase().includes(searchQuery.toLowerCase());
     
     let matchesPrice = true;
     if (priceRange === 'low') matchesPrice = space.price < 30000;
@@ -51,7 +61,7 @@ export default function ServicesScreen() {
     
     const matchesRating = ratingFilter === 0 || space.rating >= ratingFilter;
     
-    return matchesCategory && matchesSearch && matchesPrice && matchesRating;
+    return matchesCategory && matchesPrice && matchesRating;
   });
 
   const categoryIcons = {
@@ -67,29 +77,47 @@ export default function ServicesScreen() {
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Ad Services</Text>
-        <Text style={styles.headerSubtitle}>Browse all advertising options</Text>
-
-        <View style={styles.searchRow}>
-          <View style={styles.searchContainer}>
-            <Search size={20} color={Colors.text.secondary} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search services..."
-              placeholderTextColor={Colors.text.tertiary}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-          </View>
-          <TouchableOpacity
-            style={styles.filterButton}
-            onPress={() => setShowFilters(true)}
+      <LinearGradient
+        colors={Colors.gradient.primary as unknown as readonly [ColorValue, ColorValue, ...ColorValue[]]}
+        style={[styles.header, { paddingTop: insets.top + 20 }]}
+      >
+        <View style={styles.headerTop}>
+          <TouchableOpacity 
+            style={styles.locationContainer}
+            onPress={() => router.push('/location-selector')}
           >
-            <SlidersHorizontal size={20} color={Colors.primary} />
+            <MapPin size={20} color={Colors.text.inverse} />
+            <Text style={styles.locationText}>{selectedLocation}</Text>
           </TouchableOpacity>
+          <View style={styles.headerTopRight}>
+            <TouchableOpacity 
+              style={styles.searchIconButton}
+              onPress={() => router.push('/search' as any)}
+            >
+              <Search size={22} color={Colors.text.inverse} />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.filterIconButton}
+              onPress={() => setShowFilters(true)}
+            >
+              <SlidersHorizontal size={22} color={Colors.text.inverse} />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.notificationButton}
+              onPress={() => router.push('/notifications')}
+            >
+              <Bell size={22} color={Colors.text.inverse} />
+              {unreadNotificationCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{unreadNotificationCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+
+        <Text style={styles.headerTitle}>Ad Services</Text>
+      </LinearGradient>
 
       <ScrollView
         style={styles.content}
@@ -106,28 +134,34 @@ export default function ServicesScreen() {
 
           <View style={styles.servicesGrid}>
             {filteredSpaces.map(space => (
-              <TouchableOpacity
+              <View
                 key={space.id}
                 style={styles.serviceCard}
-                onPress={() => router.push(`/service-detail?id=${space.id}`)}
               >
-                <Image source={{ uri: space.image }} style={styles.serviceImage} />
+                <TouchableOpacity onPress={() => router.push(`/service-detail?id=${space.id}`)}>
+                  <Image source={{ uri: space.image }} style={styles.serviceImage} />
+                </TouchableOpacity>
                 <View style={styles.serviceContent}>
-                  <Text style={styles.serviceTitle} numberOfLines={2}>{space.title}</Text>
-                  <Text style={styles.serviceLocation} numberOfLines={1}>{space.location}</Text>
-                  <Text style={styles.serviceReach} numberOfLines={1}>{space.reach}</Text>
-                  <View style={styles.serviceFooter}>
-                    <View>
+                  <TouchableOpacity onPress={() => router.push(`/service-detail?id=${space.id}`)}>
+                    <Text style={styles.serviceTitle} numberOfLines={2}>{space.title}</Text>
+                    <Text style={styles.serviceLocation} numberOfLines={1}>{space.location}</Text>
+                    <Text style={styles.serviceReach} numberOfLines={1}>{space.reach}</Text>
+                    <View style={styles.servicePriceRow}>
                       <Text style={styles.servicePrice}>₹{(space.price / 1000).toFixed(0)}K</Text>
                       <Text style={styles.servicePriceUnit}>per {space.priceUnit}</Text>
                     </View>
-                    <View style={styles.availabilityBadge}>
-                      <View style={styles.availabilityDot} />
-                      <Text style={styles.availabilityText}>Available</Text>
-                    </View>
-                  </View>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.addToCartButton}
+                    onPress={() => {
+                      addToCart(space, 1);
+                    }}
+                  >
+                    <ShoppingCart size={14} color={Colors.text.inverse} />
+                    <Text style={styles.addToCartText}>Add to Cart</Text>
+                  </TouchableOpacity>
                 </View>
-              </TouchableOpacity>
+              </View>
             ))}
           </View>
         </View>
@@ -317,17 +351,72 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 24,
-    paddingTop: 60,
-    paddingBottom: 20,
-    backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border.light,
+    paddingBottom: 24,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
-  headerTitle: {
-    fontSize: 28,
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  headerTopRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  locationText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.text.inverse,
+  },
+  searchIconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  filterIconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notificationButton: {
+    position: 'relative' as const,
+  },
+  badge: {
+    position: 'absolute' as const,
+    top: -4,
+    right: -4,
+    backgroundColor: Colors.accent,
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    fontSize: 11,
     fontWeight: '700' as const,
     color: Colors.text.primary,
-    marginBottom: 4,
+  },
+  headerTitle: {
+    fontSize: 32,
+    fontWeight: '700' as const,
+    color: Colors.text.inverse,
+    lineHeight: 38,
   },
   headerSubtitle: {
     fontSize: 14,
@@ -438,6 +527,25 @@ const styles = StyleSheet.create({
   servicePriceUnit: {
     fontSize: 10,
     color: Colors.text.secondary,
+  },
+  servicePriceRow: {
+    marginBottom: 8,
+  },
+  addToCartButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: Colors.primary,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    ...Colors.shadow.small,
+  },
+  addToCartText: {
+    fontSize: 12,
+    fontWeight: '700' as const,
+    color: Colors.text.inverse,
   },
   availabilityBadge: {
     flexDirection: 'row',

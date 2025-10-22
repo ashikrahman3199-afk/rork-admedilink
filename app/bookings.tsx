@@ -238,7 +238,10 @@ export default function BookingsScreen() {
                       ₹{booking.amount.toLocaleString('en-IN')}
                     </Text>
                   </View>
-                  <TouchableOpacity style={styles.viewButton}>
+                  <TouchableOpacity 
+                    style={styles.viewButton}
+                    onPress={() => router.push(`/service-detail?id=1`)}
+                  >
                     <Text style={styles.viewButtonText}>View Details</Text>
                   </TouchableOpacity>
                 </View>

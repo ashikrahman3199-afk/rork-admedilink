@@ -8,7 +8,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
-import { TrendingUp, Eye, Target, Users, Calendar, DollarSign, User, Settings, Clock } from 'lucide-react-native';
+import { TrendingUp, Eye, Users, Calendar, DollarSign, User, Settings, Clock } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 
@@ -23,7 +23,6 @@ export default function DashboardScreen() {
   const stats = [
     { id: '1', label: 'Reach', value: '4.5M', change: '+12%', icon: Users, color: Colors.primary },
     { id: '2', label: 'Visibility', value: '78%', change: '+5%', icon: Eye, color: Colors.info },
-    { id: '3', label: 'Conversion', value: '3.2%', change: '+8%', icon: Target, color: Colors.success },
     { id: '4', label: 'Total Spend', value: '₹1.5L', change: '-3%', icon: DollarSign, color: Colors.accent },
   ];
 
@@ -192,7 +191,13 @@ export default function DashboardScreen() {
           </View>
 
           {recentCampaigns.map(campaign => (
-            <TouchableOpacity key={campaign.id} style={styles.campaignCard}>
+            <TouchableOpacity 
+              key={campaign.id} 
+              style={styles.campaignCard}
+              onPress={() => {
+                console.log('Campaign clicked:', campaign.id);
+              }}
+            >
               <View style={styles.campaignHeader}>
                 <View style={styles.campaignInfo}>
                   <Text style={styles.campaignName}>{campaign.name}</Text>
@@ -400,7 +405,8 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   statCard: {
-    width: (width - 44) / 2,
+    flex: 1,
+    minWidth: (width - 56) / 3,
     backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: 16,

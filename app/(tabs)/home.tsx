@@ -24,8 +24,7 @@ import {
   Radio,
   Film,
   Users as UsersIcon,
-  Eye,
-  Calendar,
+  ShoppingCart,
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { adSpaces, categories, AdCategory } from '@/constants/adSpaces';
@@ -149,7 +148,10 @@ export default function HomeScreen() {
           >
             <TouchableOpacity
               style={styles.categoryCard}
-              onPress={() => setSelectedCategory('all')}
+              onPress={() => {
+                setSelectedCategory('all');
+                router.push('/(tabs)/services');
+              }}
             >
               <View style={[
                 styles.categoryIconCircle,
@@ -164,7 +166,9 @@ export default function HomeScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.categoryCard}
-              onPress={() => setSelectedCategory('billboards')}
+              onPress={() => {
+                router.push({ pathname: '/(tabs)/services', params: { category: 'billboards' } });
+              }}
             >
               <View style={[
                 styles.categoryIconCircle,
@@ -179,7 +183,9 @@ export default function HomeScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.categoryCard}
-              onPress={() => setSelectedCategory('print')}
+              onPress={() => {
+                router.push({ pathname: '/(tabs)/services', params: { category: 'print' } });
+              }}
             >
               <View style={[
                 styles.categoryIconCircle,
@@ -194,7 +200,9 @@ export default function HomeScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.categoryCard}
-              onPress={() => setSelectedCategory('digital')}
+              onPress={() => {
+                router.push({ pathname: '/(tabs)/services', params: { category: 'digital' } });
+              }}
             >
               <View style={[
                 styles.categoryIconCircle,
@@ -209,7 +217,9 @@ export default function HomeScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.categoryCard}
-              onPress={() => setSelectedCategory('radio')}
+              onPress={() => {
+                router.push({ pathname: '/(tabs)/services', params: { category: 'radio' } });
+              }}
             >
               <View style={[
                 styles.categoryIconCircle,
@@ -224,7 +234,9 @@ export default function HomeScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.categoryCard}
-              onPress={() => setSelectedCategory('cinema')}
+              onPress={() => {
+                router.push({ pathname: '/(tabs)/services', params: { category: 'cinema' } });
+              }}
             >
               <View style={[
                 styles.categoryIconCircle,
@@ -239,7 +251,9 @@ export default function HomeScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.categoryCard}
-              onPress={() => setSelectedCategory('events')}
+              onPress={() => {
+                router.push({ pathname: '/(tabs)/services', params: { category: 'events' } });
+              }}
             >
               <View style={[
                 styles.categoryIconCircle,
@@ -296,11 +310,11 @@ export default function HomeScreen() {
                         style={styles.viewBookButton}
                         onPress={(e) => {
                           e.stopPropagation();
-                          router.push(`/booking?serviceId=${space.id}`);
+                          addToCart(space, 1);
                         }}
                       >
-                        <Calendar size={14} color={Colors.text.inverse} />
-                        <Text style={styles.viewBookText}>Book</Text>
+                        <ShoppingCart size={14} color={Colors.text.inverse} />
+                        <Text style={styles.viewBookText}>Add</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -318,47 +332,43 @@ export default function HomeScreen() {
             <Text style={styles.resultCount}>{filteredSpaces.length} results</Text>
           </View>
           {filteredSpaces.map(space => (
-            <TouchableOpacity
-              key={space.id}
-              style={styles.adSpaceCard}
-              onPress={() => {
-                addToCart(space, 1);
-                router.push('/(tabs)/cart');
-              }}
-            >
-              <Image source={{ uri: space.image }} style={styles.adSpaceImage} />
-              <View style={styles.adSpaceContent}>
-                <View style={styles.adSpaceHeader}>
-                  <Text style={styles.adSpaceTitle} numberOfLines={1}>{space.title}</Text>
-                  <View style={styles.ratingContainer}>
-                    <Star size={14} color={Colors.accent} fill={Colors.accent} />
-                    <Text style={styles.adSpaceRating}>{space.rating}</Text>
+              <TouchableOpacity
+                key={space.id}
+                style={styles.adSpaceCard}
+                onPress={() => router.push(`/service-detail?id=${space.id}`)}
+              >
+                <Image source={{ uri: space.image }} style={styles.adSpaceImage} />
+                <View style={styles.adSpaceContent}>
+                  <View style={styles.adSpaceHeader}>
+                    <Text style={styles.adSpaceTitle} numberOfLines={1}>{space.title}</Text>
+                    <View style={styles.ratingContainer}>
+                      <Star size={14} color={Colors.accent} fill={Colors.accent} />
+                      <Text style={styles.adSpaceRating}>{space.rating}</Text>
+                    </View>
                   </View>
-                </View>
-                <View style={styles.adSpaceLocation}>
-                  <MapPin size={14} color={Colors.text.secondary} />
-                  <Text style={styles.adSpaceLocationText} numberOfLines={1}>{space.location}</Text>
-                </View>
-                <Text style={styles.adSpaceReach}>{space.reach}</Text>
-                <View style={styles.adSpaceFooter}>
-                  <View>
-                    <Text style={styles.adSpacePrice}>₹{space.price.toLocaleString('en-IN')}</Text>
-                    <Text style={styles.adSpacePriceUnit}>per {space.priceUnit}</Text>
+                  <View style={styles.adSpaceLocation}>
+                    <MapPin size={14} color={Colors.text.secondary} />
+                    <Text style={styles.adSpaceLocationText} numberOfLines={1}>{space.location}</Text>
                   </View>
-                  <View style={styles.adSpaceActions}>
+                  <Text style={styles.adSpaceReach}>{space.reach}</Text>
+                  <View style={styles.adSpaceFooter}>
+                    <View>
+                      <Text style={styles.adSpacePrice}>₹{space.price.toLocaleString('en-IN')}</Text>
+                      <Text style={styles.adSpacePriceUnit}>per {space.priceUnit}</Text>
+                    </View>
                     <TouchableOpacity
-                      style={styles.viewButton}
+                      style={styles.addCartButton}
                       onPress={(e) => {
                         e.stopPropagation();
-                        router.push(`/service-detail?id=${space.id}`);
+                        addToCart(space, 1);
                       }}
                     >
-                      <Eye size={16} color={Colors.primary} />
+                      <ShoppingCart size={14} color={Colors.text.inverse} />
+                      <Text style={styles.addCartText}>Add</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
-              </View>
-            </TouchableOpacity>
+              </TouchableOpacity>
           ))}
         </View>
 
@@ -690,26 +700,20 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Colors.text.secondary,
   },
-  adSpaceActions: {
+  addCartButton: {
     flexDirection: 'row',
-    gap: 8,
-  },
-  viewButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: `${Colors.primary}15`,
-    justifyContent: 'center',
     alignItems: 'center',
-  },
-  bookButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    gap: 4,
     backgroundColor: Colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 10,
     ...Colors.shadow.small,
+  },
+  addCartText: {
+    fontSize: 12,
+    fontWeight: '700' as const,
+    color: Colors.text.inverse,
   },
   bottomSpacer: {
     height: 100,
