@@ -46,10 +46,10 @@ export default function ProfileScreen() {
     {
       title: 'Account',
       items: [
-        { id: '2', label: 'Personal Information', icon: User, onPress: () => console.log('Personal Info') },
-        { id: '3', label: 'Company Details', icon: Building2, onPress: () => console.log('Company') },
-        { id: '4', label: 'Notification Settings', icon: Bell, onPress: () => router.push('/settings') },
-        { id: '5', label: 'App Preferences', icon: Settings, onPress: () => router.push('/settings') },
+        { id: '2', label: 'Personal Information', icon: User, onPress: () => router.push('/personal-info' as any) },
+        { id: '3', label: 'Company Details', icon: Building2, onPress: () => router.push('/company-details' as any) },
+        { id: '4', label: 'Notification Settings', icon: Bell, onPress: () => router.push('/notification-settings' as any) },
+        { id: '5', label: 'App Preferences', icon: Settings, onPress: () => router.push('/app-preferences' as any) },
       ],
     },
     {
