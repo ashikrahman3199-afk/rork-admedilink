@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,9 @@ import {
   Image,
   Dimensions,
   ColorValue,
+  Animated,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -38,6 +41,8 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { unreadNotificationCount, selectedLocation, addToCart } = useApp();
   const [selectedCategory, setSelectedCategory] = useState<AdCategory | 'all' | 'events'>('all');
+  const lastScrollY = useRef(0);
+  const headerTranslateY = useRef(new Animated.Value(0)).current;
 
   const filteredSpaces = adSpaces.filter(space => {
     const matchesCategory = selectedCategory === 'all' || space.category === selectedCategory;
@@ -53,14 +58,45 @@ export default function HomeScreen() {
     { id: '4', title: 'Cinema Advertising Package', type: 'Featured', image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&h=600', serviceId: '8' },
   ];
 
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const currentScrollY = event.nativeEvent.contentOffset.y;
+    const scrollDiff = currentScrollY - lastScrollY.current;
+
+    if (currentScrollY <= 0) {
+      Animated.spring(headerTranslateY, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 100,
+        friction: 10,
+      }).start();
+    } else if (scrollDiff > 0 && currentScrollY > 50) {
+      Animated.spring(headerTranslateY, {
+        toValue: -120,
+        useNativeDriver: true,
+        tension: 100,
+        friction: 10,
+      }).start();
+    } else if (scrollDiff < -5) {
+      Animated.spring(headerTranslateY, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 100,
+        friction: 10,
+      }).start();
+    }
+
+    lastScrollY.current = currentScrollY;
+  };
+
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       
-      <LinearGradient
-        colors={Colors.gradient.primary as unknown as readonly [ColorValue, ColorValue, ...ColorValue[]]}
-        style={[styles.header, { paddingTop: insets.top + 20 }]}
-      >
+      <Animated.View style={[{ transform: [{ translateY: headerTranslateY }] }]}>
+        <LinearGradient
+          colors={Colors.gradient.primary as unknown as readonly [ColorValue, ColorValue, ...ColorValue[]]}
+          style={[styles.header, { paddingTop: insets.top + 20 }]}
+        >
         <View style={styles.headerTop}>
           <TouchableOpacity 
             style={styles.locationContainer}
@@ -91,12 +127,15 @@ export default function HomeScreen() {
         </View>
 
         <Text style={styles.headerTitle}>Find Perfect{'\n'}Ad Spaces</Text>
-      </LinearGradient>
+        </LinearGradient>
+      </Animated.View>
 
       <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentContainer}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
         <View style={styles.section}>
           <View style={styles.sectionHeader}>

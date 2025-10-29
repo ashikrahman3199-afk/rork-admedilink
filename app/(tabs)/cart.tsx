@@ -140,12 +140,12 @@ export default function CartScreen() {
             <Text style={styles.footerLabel}>Total</Text>
             <Text style={styles.footerPrice}>₹{(cartTotal * 1.23).toLocaleString('en-IN')}</Text>
           </View>
-          <TouchableOpacity style={styles.checkoutButton} onPress={() => router.push('/booking')}>
+          <TouchableOpacity style={styles.checkoutButton} onPress={() => router.push('/custom-bundle')}>
             <LinearGradient
               colors={Colors.gradient.primary as unknown as readonly [ColorValue, ColorValue, ...ColorValue[]]}
               style={styles.checkoutGradient}
             >
-              <Text style={styles.checkoutText}>Proceed to Checkout</Text>
+              <Text style={styles.checkoutText}>Next</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>

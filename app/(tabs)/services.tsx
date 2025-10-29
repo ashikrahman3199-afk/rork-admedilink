@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,9 @@ import {
   Dimensions,
   ColorValue,
   Modal,
+  Animated,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
 } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -40,6 +43,8 @@ export default function ServicesScreen() {
   const params = useLocalSearchParams();
   const { selectedLocation, unreadNotificationCount, addToCart } = useApp();
   const [selectedCategory, setSelectedCategory] = useState<AdCategory | 'all'>('all');
+  const lastScrollY = useRef(0);
+  const headerTranslateY = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (params.category && typeof params.category === 'string') {
@@ -64,6 +69,36 @@ export default function ServicesScreen() {
     return matchesCategory && matchesPrice && matchesRating;
   });
 
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const currentScrollY = event.nativeEvent.contentOffset.y;
+    const scrollDiff = currentScrollY - lastScrollY.current;
+
+    if (currentScrollY <= 0) {
+      Animated.spring(headerTranslateY, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 100,
+        friction: 10,
+      }).start();
+    } else if (scrollDiff > 0 && currentScrollY > 50) {
+      Animated.spring(headerTranslateY, {
+        toValue: -120,
+        useNativeDriver: true,
+        tension: 100,
+        friction: 10,
+      }).start();
+    } else if (scrollDiff < -5) {
+      Animated.spring(headerTranslateY, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 100,
+        friction: 10,
+      }).start();
+    }
+
+    lastScrollY.current = currentScrollY;
+  };
+
   const categoryIcons = {
     billboards: Monitor,
     print: Newspaper,
@@ -77,10 +112,11 @@ export default function ServicesScreen() {
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       
-      <LinearGradient
-        colors={Colors.gradient.primary as unknown as readonly [ColorValue, ColorValue, ...ColorValue[]]}
-        style={[styles.header, { paddingTop: insets.top + 20 }]}
-      >
+      <Animated.View style={[{ transform: [{ translateY: headerTranslateY }] }]}>
+        <LinearGradient
+          colors={Colors.gradient.primary as unknown as readonly [ColorValue, ColorValue, ...ColorValue[]]}
+          style={[styles.header, { paddingTop: insets.top + 20 }]}
+        >
         <View style={styles.headerTop}>
           <TouchableOpacity 
             style={styles.locationContainer}
@@ -117,12 +153,15 @@ export default function ServicesScreen() {
         </View>
 
         <Text style={styles.headerTitle}>Ad Services</Text>
-      </LinearGradient>
+        </LinearGradient>
+      </Animated.View>
 
       <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentContainer}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
