@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   View,
   Text,
@@ -6,9 +6,13 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  Animated,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
-import { TrendingUp, Eye, Users, Calendar, DollarSign, User, Settings, Clock } from 'lucide-react-native';
+import { TrendingUp, Eye, Users, Calendar, DollarSign, User, Clock } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Colors from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 
@@ -17,6 +21,9 @@ const { width } = Dimensions.get('window');
 export default function DashboardScreen() {
   const router = useRouter();
   const { bookings } = useApp();
+  const insets = useSafeAreaInsets();
+  const lastScrollY = useRef(0);
+  const headerTranslateY = useRef(new Animated.Value(0)).current;
 
   const recentBookings = bookings.slice(0, 3);
 
@@ -47,35 +54,66 @@ export default function DashboardScreen() {
     }
   };
 
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const currentScrollY = event.nativeEvent.contentOffset.y;
+    const scrollDiff = currentScrollY - lastScrollY.current;
+
+    if (currentScrollY <= 0) {
+      Animated.spring(headerTranslateY, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 100,
+        friction: 10,
+      }).start();
+    } else if (scrollDiff > 0 && currentScrollY > 50) {
+      Animated.spring(headerTranslateY, {
+        toValue: -80,
+        useNativeDriver: true,
+        tension: 100,
+        friction: 10,
+      }).start();
+    } else if (scrollDiff < -5) {
+      Animated.spring(headerTranslateY, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 100,
+        friction: 10,
+      }).start();
+    }
+
+    lastScrollY.current = currentScrollY;
+  };
+
   return (
     <View style={styles.container}>
       <Stack.Screen 
         options={{ 
-          title: 'Dashboard', 
-          headerShown: true,
-          headerLeft: () => (
-            <TouchableOpacity 
-              style={styles.headerButton}
-              onPress={() => router.push('/(tabs)/profile')}
-            >
-              <User size={24} color={Colors.primary} />
-            </TouchableOpacity>
-          ),
-          headerRight: () => (
-            <TouchableOpacity 
-              style={styles.headerButton}
-              onPress={() => router.push('/settings')}
-            >
-              <Settings size={24} color={Colors.primary} />
-            </TouchableOpacity>
-          ),
+          headerShown: false,
         }} 
       />
+      
+      <Animated.View style={[
+        styles.customHeader,
+        {
+          paddingTop: insets.top + 12,
+          transform: [{ translateY: headerTranslateY }],
+        },
+      ]}>
+        <Text style={styles.customHeaderTitle}>Dashboard</Text>
+        <TouchableOpacity 
+          style={styles.headerButton}
+          onPress={() => router.push('/(tabs)/profile')}
+        >
+          <User size={24} color={Colors.primary} />
+        </TouchableOpacity>
+      </Animated.View>
       
       <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentContainer}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -277,6 +315,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  customHeader: {
+    backgroundColor: Colors.surface,
+    paddingBottom: 12,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border.light,
+    ...Colors.shadow.small,
+  },
+  customHeaderTitle: {
+    fontSize: 24,
+    fontWeight: '700' as const,
+    color: Colors.text.primary,
   },
   headerButton: {
     padding: 8,

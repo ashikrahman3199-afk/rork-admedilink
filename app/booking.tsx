@@ -7,7 +7,13 @@ import {
   TouchableOpacity,
   TextInput,
   ColorValue,
+  Modal,
+  Image,
+  Alert,
+  Platform,
 } from 'react-native';
+import { Calendar as RNCalendar } from 'react-native-calendars';
+import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, router } from 'expo-router';
 import { 
@@ -34,6 +40,10 @@ export default function BookingScreen() {
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [showStartCalendar, setShowStartCalendar] = useState(false);
+  const [showEndCalendar, setShowEndCalendar] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [paymentOption, setPaymentOption] = useState<'callback' | 'advance' | null>(null);
 
   const steps: { id: Step; title: string; icon: any }[] = [
     { id: 'details', title: 'Details', icon: Package },
@@ -66,7 +76,12 @@ export default function BookingScreen() {
     if (currentStepIndex < steps.length - 1) {
       setCurrentStep(steps[currentStepIndex + 1].id);
     } else {
-      router.push('/payment');
+      if (paymentOption === 'callback') {
+        console.log('Booking request sent to team for callback');
+        router.push('/booking-success');
+      } else if (paymentOption === 'advance') {
+        router.push('/payment');
+      }
     }
   };
 
@@ -89,9 +104,72 @@ export default function BookingScreen() {
       case 'services':
         return selectedServices.length > 0;
       case 'review':
-        return true;
+        return paymentOption !== null;
       default:
         return false;
+    }
+  };
+
+  const getMarkedDates = () => {
+    const marked: Record<string, any> = {};
+    const today = new Date();
+    const unavailableDates = [
+      new Date(today.getFullYear(), today.getMonth(), 5),
+      new Date(today.getFullYear(), today.getMonth(), 12),
+      new Date(today.getFullYear(), today.getMonth(), 19),
+      new Date(today.getFullYear(), today.getMonth(), 26),
+    ];
+
+    unavailableDates.forEach(date => {
+      const dateStr = date.toISOString().split('T')[0];
+      marked[dateStr] = {
+        disabled: true,
+        disableTouchEvent: true,
+        color: Colors.border.light,
+        textColor: Colors.text.tertiary,
+      };
+    });
+
+    if (startDate) {
+      marked[startDate] = {
+        selected: true,
+        selectedColor: Colors.primary,
+        selectedTextColor: Colors.text.inverse,
+      };
+    }
+    if (endDate) {
+      marked[endDate] = {
+        selected: true,
+        selectedColor: Colors.primary,
+        selectedTextColor: Colors.text.inverse,
+      };
+    }
+
+    return marked;
+  };
+
+  const pickImage = async () => {
+    if (Platform.OS === 'web') {
+      Alert.alert('Not Available', 'Image upload is not available on web');
+      return;
+    }
+
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (permissionResult.granted === false) {
+      Alert.alert('Permission Required', 'You need to grant camera roll permissions to upload images.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setUploadedImage(result.assets[0].uri);
     }
   };
 
@@ -119,30 +197,34 @@ export default function BookingScreen() {
             <View style={styles.dateRow}>
               <View style={[styles.inputGroup, { flex: 1 }]}>
                 <Text style={styles.inputLabel}>Start Date</Text>
-                <View style={styles.dateInput}>
+                <TouchableOpacity 
+                  style={styles.dateInput}
+                  onPress={() => setShowStartCalendar(true)}
+                >
                   <Calendar size={18} color={Colors.text.secondary} />
-                  <TextInput
-                    style={styles.dateInputText}
-                    placeholder="DD/MM/YYYY"
-                    placeholderTextColor={Colors.text.tertiary}
-                    value={startDate}
-                    onChangeText={setStartDate}
-                  />
-                </View>
+                  <Text style={[
+                    styles.dateInputText,
+                    !startDate && styles.dateInputPlaceholder
+                  ]}>
+                    {startDate ? new Date(startDate).toLocaleDateString('en-GB') : 'Select Date'}
+                  </Text>
+                </TouchableOpacity>
               </View>
 
               <View style={[styles.inputGroup, { flex: 1 }]}>
                 <Text style={styles.inputLabel}>End Date</Text>
-                <View style={styles.dateInput}>
+                <TouchableOpacity 
+                  style={styles.dateInput}
+                  onPress={() => setShowEndCalendar(true)}
+                >
                   <Calendar size={18} color={Colors.text.secondary} />
-                  <TextInput
-                    style={styles.dateInputText}
-                    placeholder="DD/MM/YYYY"
-                    placeholderTextColor={Colors.text.tertiary}
-                    value={endDate}
-                    onChangeText={setEndDate}
-                  />
-                </View>
+                  <Text style={[
+                    styles.dateInputText,
+                    !endDate && styles.dateInputPlaceholder
+                  ]}>
+                    {endDate ? new Date(endDate).toLocaleDateString('en-GB') : 'Select Date'}
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
 
@@ -167,7 +249,7 @@ export default function BookingScreen() {
           <View style={styles.stepContent}>
             <Text style={styles.stepTitle}>Campaign Objective</Text>
             <Text style={styles.stepDescription}>
-              What's the main goal of your campaign?
+              What&apos;s the main goal of your campaign?
             </Text>
 
             <View style={styles.optionsGrid}>
@@ -250,6 +332,26 @@ export default function BookingScreen() {
                 </TouchableOpacity>
               ))}
             </View>
+
+            <View style={styles.uploadSection}>
+              <Text style={styles.uploadSectionTitle}>Or Upload Your Design</Text>
+              <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
+                {uploadedImage ? (
+                  <View style={styles.uploadedImageContainer}>
+                    <Image source={{ uri: uploadedImage }} style={styles.uploadedImage} />
+                    <View style={styles.uploadOverlay}>
+                      <Text style={styles.uploadOverlayText}>Tap to change</Text>
+                    </View>
+                  </View>
+                ) : (
+                  <View style={styles.uploadPlaceholder}>
+                    <Palette size={32} color={Colors.text.tertiary} />
+                    <Text style={styles.uploadPlaceholderText}>Upload Image</Text>
+                    <Text style={styles.uploadPlaceholderSubtext}>16:9 aspect ratio recommended</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
         );
 
@@ -303,7 +405,7 @@ export default function BookingScreen() {
           <View style={styles.stepContent}>
             <Text style={styles.stepTitle}>Review & Confirm</Text>
             <Text style={styles.stepDescription}>
-              Review your campaign details before proceeding to payment
+              Review your campaign details before requesting team callback
             </Text>
 
             <View style={styles.reviewCard}>
@@ -342,11 +444,80 @@ export default function BookingScreen() {
               <View style={styles.reviewDivider} />
 
               <View style={styles.reviewSection}>
-                <Text style={styles.reviewLabel}>Total Amount</Text>
+                <Text style={styles.reviewLabel}>Estimated Total</Text>
                 <Text style={styles.reviewTotal}>
                   ₹{(cartTotal * 1.23).toLocaleString('en-IN')}
                 </Text>
+                <View style={styles.priceDisclaimer}>
+                  <Text style={styles.priceDisclaimerText}>
+                    * Prices may vary depending upon the demand
+                  </Text>
+                </View>
               </View>
+            </View>
+
+            <View style={styles.bookingOptionsCard}>
+              <Text style={styles.bookingOptionsTitle}>Choose Booking Option</Text>
+              
+              <TouchableOpacity
+                style={[
+                  styles.bookingOptionCard,
+                  paymentOption === 'callback' && styles.bookingOptionCardSelected,
+                ]}
+                onPress={() => setPaymentOption('callback')}
+              >
+                <View style={styles.bookingOptionContent}>
+                  <View style={[
+                    styles.bookingOptionRadio,
+                    paymentOption === 'callback' && styles.bookingOptionRadioSelected,
+                  ]}>
+                    {paymentOption === 'callback' && (
+                      <View style={styles.bookingOptionRadioDot} />
+                    )}
+                  </View>
+                  <View style={styles.bookingOptionInfo}>
+                    <Text style={[
+                      styles.bookingOptionTitle,
+                      paymentOption === 'callback' && styles.bookingOptionTitleSelected,
+                    ]}>
+                      Get a Callback from Team
+                    </Text>
+                    <Text style={styles.bookingOptionDescription}>
+                      Our team will review your package and contact you with final pricing and next steps
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.bookingOptionCard,
+                  paymentOption === 'advance' && styles.bookingOptionCardSelected,
+                ]}
+                onPress={() => setPaymentOption('advance')}
+              >
+                <View style={styles.bookingOptionContent}>
+                  <View style={[
+                    styles.bookingOptionRadio,
+                    paymentOption === 'advance' && styles.bookingOptionRadioSelected,
+                  ]}>
+                    {paymentOption === 'advance' && (
+                      <View style={styles.bookingOptionRadioDot} />
+                    )}
+                  </View>
+                  <View style={styles.bookingOptionInfo}>
+                    <Text style={[
+                      styles.bookingOptionTitle,
+                      paymentOption === 'advance' && styles.bookingOptionTitleSelected,
+                    ]}>
+                      Pay Advance & Get Callback
+                    </Text>
+                    <Text style={styles.bookingOptionDescription}>
+                      Pay a minimal advance amount (₹{Math.round(cartTotal * 0.1).toLocaleString('en-IN')}) to secure your booking
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
             </View>
           </View>
         );
@@ -426,6 +597,112 @@ export default function BookingScreen() {
         <View style={styles.bottomSpacer} />
       </ScrollView>
 
+      <Modal
+        visible={showStartCalendar}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowStartCalendar(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.calendarModal}>
+            <View style={styles.calendarHeader}>
+              <Text style={styles.calendarTitle}>Select Start Date</Text>
+              <TouchableOpacity onPress={() => setShowStartCalendar(false)}>
+                <Text style={styles.calendarClose}>Done</Text>
+              </TouchableOpacity>
+            </View>
+            <RNCalendar
+              onDayPress={(day) => {
+                setStartDate(day.dateString);
+                setShowStartCalendar(false);
+              }}
+              markedDates={getMarkedDates()}
+              minDate={new Date().toISOString().split('T')[0]}
+              theme={{
+                backgroundColor: Colors.background,
+                calendarBackground: Colors.surface,
+                textSectionTitleColor: Colors.text.primary,
+                selectedDayBackgroundColor: Colors.primary,
+                selectedDayTextColor: Colors.text.inverse,
+                todayTextColor: Colors.primary,
+                dayTextColor: Colors.text.primary,
+                textDisabledColor: Colors.text.tertiary,
+                dotColor: Colors.primary,
+                selectedDotColor: Colors.text.inverse,
+                arrowColor: Colors.primary,
+                monthTextColor: Colors.text.primary,
+                textDayFontWeight: '400',
+                textMonthFontWeight: '700',
+                textDayHeaderFontWeight: '600',
+              }}
+            />
+            <View style={styles.calendarLegend}>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: Colors.border.light }]} />
+                <Text style={styles.legendText}>Unavailable</Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: Colors.primary }]} />
+                <Text style={styles.legendText}>Selected</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showEndCalendar}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowEndCalendar(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.calendarModal}>
+            <View style={styles.calendarHeader}>
+              <Text style={styles.calendarTitle}>Select End Date</Text>
+              <TouchableOpacity onPress={() => setShowEndCalendar(false)}>
+                <Text style={styles.calendarClose}>Done</Text>
+              </TouchableOpacity>
+            </View>
+            <RNCalendar
+              onDayPress={(day) => {
+                setEndDate(day.dateString);
+                setShowEndCalendar(false);
+              }}
+              markedDates={getMarkedDates()}
+              minDate={startDate || new Date().toISOString().split('T')[0]}
+              theme={{
+                backgroundColor: Colors.background,
+                calendarBackground: Colors.surface,
+                textSectionTitleColor: Colors.text.primary,
+                selectedDayBackgroundColor: Colors.primary,
+                selectedDayTextColor: Colors.text.inverse,
+                todayTextColor: Colors.primary,
+                dayTextColor: Colors.text.primary,
+                textDisabledColor: Colors.text.tertiary,
+                dotColor: Colors.primary,
+                selectedDotColor: Colors.text.inverse,
+                arrowColor: Colors.primary,
+                monthTextColor: Colors.text.primary,
+                textDayFontWeight: '400',
+                textMonthFontWeight: '700',
+                textDayHeaderFontWeight: '600',
+              }}
+            />
+            <View style={styles.calendarLegend}>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: Colors.border.light }]} />
+                <Text style={styles.legendText}>Unavailable</Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: Colors.primary }]} />
+                <Text style={styles.legendText}>Selected</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       <View style={styles.footer}>
         <TouchableOpacity
           style={[styles.nextButton, !canProceed() && styles.nextButtonDisabled]}
@@ -441,7 +718,10 @@ export default function BookingScreen() {
             style={styles.nextGradient}
           >
             <Text style={styles.nextText}>
-              {currentStep === 'review' ? 'Proceed to Payment' : 'Continue'}
+              {currentStep === 'review' 
+                ? (paymentOption === 'callback' ? 'Request Callback' : 'Proceed to Payment')
+                : 'Continue'
+              }
             </Text>
             <ChevronRight size={20} color={Colors.text.inverse} />
           </LinearGradient>
@@ -572,6 +852,112 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: Colors.text.primary,
+  },
+  dateInputPlaceholder: {
+    color: Colors.text.tertiary,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  calendarModal: {
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    maxHeight: '80%',
+  },
+  calendarHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  calendarTitle: {
+    fontSize: 20,
+    fontWeight: '700' as const,
+    color: Colors.text.primary,
+  },
+  calendarClose: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.primary,
+  },
+  calendarLegend: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 24,
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border.light,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  legendDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  legendText: {
+    fontSize: 13,
+    color: Colors.text.secondary,
+  },
+  uploadSection: {
+    marginTop: 8,
+  },
+  uploadSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.text.primary,
+    marginBottom: 12,
+  },
+  uploadButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: Colors.border.light,
+    borderStyle: 'dashed' as const,
+  },
+  uploadPlaceholder: {
+    paddingVertical: 48,
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: Colors.surface,
+  },
+  uploadPlaceholderText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.text.primary,
+  },
+  uploadPlaceholderSubtext: {
+    fontSize: 13,
+    color: Colors.text.secondary,
+  },
+  uploadedImageContainer: {
+    position: 'relative' as const,
+    width: '100%',
+    height: 200,
+  },
+  uploadedImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover' as const,
+  },
+  uploadOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  uploadOverlayText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.text.inverse,
   },
   cartSummary: {
     backgroundColor: Colors.surface,
@@ -784,6 +1170,78 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700' as const,
     color: Colors.primary,
+  },
+  priceDisclaimer: {
+    marginTop: 8,
+    paddingTop: 8,
+  },
+  priceDisclaimerText: {
+    fontSize: 12,
+    color: Colors.text.tertiary,
+    fontStyle: 'italic' as const,
+  },
+  bookingOptionsCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: 20,
+    gap: 16,
+  },
+  bookingOptionsTitle: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: Colors.text.primary,
+    marginBottom: 4,
+  },
+  bookingOptionCard: {
+    backgroundColor: Colors.background,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 2,
+    borderColor: Colors.border.light,
+  },
+  bookingOptionCardSelected: {
+    borderColor: Colors.primary,
+    backgroundColor: Colors.primary + '08',
+  },
+  bookingOptionContent: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  bookingOptionRadio: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: Colors.border.light,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  bookingOptionRadioSelected: {
+    borderColor: Colors.primary,
+  },
+  bookingOptionRadioDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: Colors.primary,
+  },
+  bookingOptionInfo: {
+    flex: 1,
+  },
+  bookingOptionTitle: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.text.primary,
+    marginBottom: 6,
+  },
+  bookingOptionTitleSelected: {
+    color: Colors.primary,
+  },
+  bookingOptionDescription: {
+    fontSize: 13,
+    color: Colors.text.secondary,
+    lineHeight: 18,
   },
   bottomSpacer: {
     height: 100,

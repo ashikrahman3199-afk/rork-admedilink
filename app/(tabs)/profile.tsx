@@ -24,6 +24,7 @@ import {
   ChevronRight,
   ShoppingBag,
   Package,
+  ArrowLeft,
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
@@ -66,10 +67,18 @@ export default function ProfileScreen() {
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       
+      <View style={[styles.customHeader, { paddingTop: insets.top + 12 }]}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <ArrowLeft size={24} color={Colors.text.primary} />
+        </TouchableOpacity>
+        <Text style={styles.customHeaderTitle}>Profile</Text>
+        <View style={styles.headerSpacer} />
+      </View>
+      
       <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.contentContainer, { paddingTop: insets.top + 16 }]}
+        contentContainerStyle={styles.contentContainer}
       >
         <LinearGradient
           colors={Colors.gradient.primary as unknown as readonly [ColorValue, ColorValue, ...ColorValue[]]}
@@ -162,6 +171,28 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  customHeader: {
+    backgroundColor: Colors.surface,
+    paddingBottom: 12,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border.light,
+    ...Colors.shadow.small,
+  },
+  customHeaderTitle: {
+    fontSize: 20,
+    fontWeight: '700' as const,
+    color: Colors.text.primary,
+  },
+  backButton: {
+    padding: 8,
+  },
+  headerSpacer: {
+    width: 40,
   },
   content: {
     flex: 1,
