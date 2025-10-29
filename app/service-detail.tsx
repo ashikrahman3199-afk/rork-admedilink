@@ -21,6 +21,7 @@ import {
   TrendingUp,
   CheckCircle2,
   ShoppingCart,
+  Heart,
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { adSpaces } from '@/constants/adSpaces';
@@ -31,7 +32,7 @@ const { width } = Dimensions.get('window');
 export default function ServiceDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
-  const { addToCart } = useApp();
+  const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useApp();
   const [selectedDuration, setSelectedDuration] = useState(1);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
@@ -81,9 +82,12 @@ export default function ServiceDetailScreen() {
     router.push('/(tabs)/cart');
   };
 
-  const handleBookNow = () => {
-    addToCart(service, selectedDuration);
-    router.push('/booking');
+  const handleWishlist = () => {
+    if (isInWishlist(service.id)) {
+      removeFromWishlist(service.id);
+    } else {
+      addToWishlist(service);
+    }
   };
 
   return (
@@ -283,19 +287,23 @@ export default function ServiceDetailScreen() {
         <View style={styles.actionButtons}>
           <TouchableOpacity
             style={styles.cartButton}
-            onPress={handleAddToCart}
+            onPress={handleWishlist}
           >
-            <ShoppingCart size={20} color={Colors.primary} />
+            <Heart 
+              size={20} 
+              color={isInWishlist(service.id) ? Colors.error : Colors.primary}
+              fill={isInWishlist(service.id) ? Colors.error : 'transparent'}
+            />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.bookButton}
-            onPress={handleBookNow}
+            onPress={handleAddToCart}
           >
             <LinearGradient
               colors={Colors.gradient.primary as unknown as readonly [ColorValue, ColorValue, ...ColorValue[]]}
               style={styles.bookButtonGradient}
             >
-              <Text style={styles.bookButtonText}>Book Now</Text>
+              <Text style={styles.bookButtonText}>Add to Cart</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>

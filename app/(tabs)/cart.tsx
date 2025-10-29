@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   View,
   Text,
@@ -7,20 +7,67 @@ import {
   TouchableOpacity,
   Image,
   ColorValue,
+  Animated,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, router } from 'expo-router';
 import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Colors from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 
 export default function CartScreen() {
   const { cart, removeFromCart, updateCartItemDuration, cartTotal, clearCart } = useApp();
+  const insets = useSafeAreaInsets();
+  const lastScrollY = useRef(0);
+  const headerTranslateY = useRef(new Animated.Value(0)).current;
+
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const currentScrollY = event.nativeEvent.contentOffset.y;
+    const scrollDiff = currentScrollY - lastScrollY.current;
+
+    if (currentScrollY <= 0) {
+      Animated.spring(headerTranslateY, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 100,
+        friction: 10,
+      }).start();
+    } else if (scrollDiff > 0 && currentScrollY > 50) {
+      Animated.spring(headerTranslateY, {
+        toValue: -80,
+        useNativeDriver: true,
+        tension: 100,
+        friction: 10,
+      }).start();
+    } else if (scrollDiff < -5) {
+      Animated.spring(headerTranslateY, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 100,
+        friction: 10,
+      }).start();
+    }
+
+    lastScrollY.current = currentScrollY;
+  };
 
   if (cart.length === 0) {
     return (
       <View style={styles.container}>
-        <Stack.Screen options={{ title: 'Cart', headerShown: true }} />
+        <Stack.Screen options={{ headerShown: false }} />
+        <Animated.View style={[
+          styles.customHeader,
+          {
+            paddingTop: insets.top + 12,
+            transform: [{ translateY: headerTranslateY }],
+          },
+        ]}>
+          <Text style={styles.customHeaderTitle}>Cart</Text>
+          <View style={{ width: 80 }} />
+        </Animated.View>
         <View style={styles.emptyContainer}>
           <ShoppingBag size={80} color={Colors.text.tertiary} strokeWidth={1.5} />
           <Text style={styles.emptyTitle}>Your cart is empty</Text>
@@ -32,22 +79,27 @@ export default function CartScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen 
-        options={{ 
-          title: 'Cart',
-          headerShown: true,
-          headerRight: () => (
-            <TouchableOpacity onPress={clearCart} style={styles.clearButton}>
-              <Text style={styles.clearButtonText}>Clear All</Text>
-            </TouchableOpacity>
-          ),
-        }} 
-      />
+      <Stack.Screen options={{ headerShown: false }} />
+      
+      <Animated.View style={[
+        styles.customHeader,
+        {
+          paddingTop: insets.top + 12,
+          transform: [{ translateY: headerTranslateY }],
+        },
+      ]}>
+        <Text style={styles.customHeaderTitle}>Cart</Text>
+        <TouchableOpacity onPress={clearCart} style={styles.clearButton}>
+          <Text style={styles.clearButtonText}>Clear All</Text>
+        </TouchableOpacity>
+      </Animated.View>
       
       <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentContainer}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
         <View style={styles.itemsContainer}>
           {cart.map(item => (
@@ -159,6 +211,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
+  customHeader: {
+    backgroundColor: Colors.surface,
+    paddingBottom: 12,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border.light,
+    ...Colors.shadow.small,
+  },
+  customHeaderTitle: {
+    fontSize: 24,
+    fontWeight: '700' as const,
+    color: Colors.text.primary,
+  },
   content: {
     flex: 1,
   },
@@ -184,7 +252,7 @@ const styles = StyleSheet.create({
     textAlign: 'center' as const,
   },
   clearButton: {
-    marginRight: 16,
+    padding: 8,
   },
   clearButtonText: {
     fontSize: 14,

@@ -169,34 +169,6 @@ export default function CustomBundleScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Upload Creative (Optional)</Text>
-          <Text style={styles.sectionDescription}>
-            Upload your campaign creative or design for better customization
-          </Text>
-          <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-            {uploadedImage ? (
-              <View style={styles.uploadedContainer}>
-                <Image source={{ uri: uploadedImage }} style={styles.uploadedImage} />
-                <TouchableOpacity 
-                  style={styles.removeImageButton}
-                  onPress={() => setUploadedImage(null)}
-                >
-                  <X size={16} color={Colors.text.inverse} />
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <View style={styles.uploadPlaceholder}>
-                <View style={styles.uploadIconContainer}>
-                  <Upload size={28} color={Colors.primary} />
-                </View>
-                <Text style={styles.uploadText}>Tap to Upload Image</Text>
-                <Text style={styles.uploadSubtext}>16:9 aspect ratio recommended</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.section}>
           <Text style={styles.sectionTitle}>Choose Booking Option</Text>
           
           <TouchableOpacity

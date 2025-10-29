@@ -49,6 +49,7 @@ export interface Notification {
 
 export const [AppProvider, useApp] = createContextHook(() => {
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [wishlist, setWishlist] = useState<AdSpace[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [currentCampaign, setCurrentCampaign] = useState<Partial<Campaign> | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -191,6 +192,24 @@ export const [AppProvider, useApp] = createContextHook(() => {
 
   const unreadNotificationCount = notifications.filter(n => !n.read).length;
 
+  const addToWishlist = useCallback((adSpace: AdSpace) => {
+    setWishlist(prev => {
+      const existing = prev.find(item => item.id === adSpace.id);
+      if (existing) {
+        return prev;
+      }
+      return [...prev, adSpace];
+    });
+  }, []);
+
+  const removeFromWishlist = useCallback((id: string) => {
+    setWishlist(prev => prev.filter(item => item.id !== id));
+  }, []);
+
+  const isInWishlist = useCallback((id: string) => {
+    return wishlist.some(item => item.id === id);
+  }, [wishlist]);
+
   return useMemo(() => ({
     cart,
     addToCart,
@@ -199,6 +218,10 @@ export const [AppProvider, useApp] = createContextHook(() => {
     clearCart,
     cartTotal,
     cartItemCount,
+    wishlist,
+    addToWishlist,
+    removeFromWishlist,
+    isInWishlist,
     campaigns,
     createCampaign,
     updateCampaign,
@@ -218,5 +241,5 @@ export const [AppProvider, useApp] = createContextHook(() => {
     unreadNotificationCount,
     selectedLocation,
     setSelectedLocation,
-  }), [cart, addToCart, removeFromCart, updateCartItemDuration, clearCart, cartTotal, cartItemCount, campaigns, createCampaign, updateCampaign, deleteCampaign, currentCampaign, bookings, createBooking, updateBooking, paymentMethods, addPaymentMethod, removePaymentMethod, notifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification, unreadNotificationCount, selectedLocation]);
+  }), [cart, addToCart, removeFromCart, updateCartItemDuration, clearCart, cartTotal, cartItemCount, wishlist, addToWishlist, removeFromWishlist, isInWishlist, campaigns, createCampaign, updateCampaign, deleteCampaign, currentCampaign, bookings, createBooking, updateBooking, paymentMethods, addPaymentMethod, removePaymentMethod, notifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification, unreadNotificationCount, selectedLocation]);
 });
