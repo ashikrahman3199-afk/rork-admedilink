@@ -43,6 +43,10 @@ export default function ServicesScreen() {
   const params = useLocalSearchParams();
   const { selectedLocation, unreadNotificationCount, addToCart } = useApp();
   const [selectedCategory, setSelectedCategory] = useState<AdCategory | 'all'>('all');
+  const [showCategoryMenu, setShowCategoryMenu] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [priceRange, setPriceRange] = useState<'all' | 'low' | 'medium' | 'high'>('all');
+  const [ratingFilter, setRatingFilter] = useState<number>(0);
   const lastScrollY = useRef(0);
   const headerTranslateY = useRef(new Animated.Value(0)).current;
 
@@ -51,10 +55,6 @@ export default function ServicesScreen() {
       setSelectedCategory(params.category as AdCategory);
     }
   }, [params.category]);
-  const [showCategoryMenu, setShowCategoryMenu] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
-  const [priceRange, setPriceRange] = useState<'all' | 'low' | 'medium' | 'high'>('all');
-  const [ratingFilter, setRatingFilter] = useState<number>(0);
 
   const filteredSpaces = adSpaces.filter(space => {
     const matchesCategory = selectedCategory === 'all' || space.category === selectedCategory;
