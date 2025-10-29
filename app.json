@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "AdMediLink",
-    "slug": "admedilink",
+    "name": "AdRun",
+    "slug": "adrun",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -15,14 +15,14 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.rork.admedilink"
+      "bundleIdentifier": "app.rork.adrun"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "app.rork.admedilink"
+      "package": "app.rork.adrun"
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
