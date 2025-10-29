@@ -11,7 +11,7 @@ import {
   NativeSyntheticEvent,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
-import { TrendingUp, Eye, Users, Calendar, DollarSign, User, Clock } from 'lucide-react-native';
+import { TrendingUp, Eye, Users, Calendar, DollarSign, User, Clock, Heart } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Colors from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
@@ -99,6 +99,12 @@ export default function DashboardScreen() {
           transform: [{ translateY: headerTranslateY }],
         },
       ]}>
+        <TouchableOpacity 
+          style={styles.headerButton}
+          onPress={() => router.push('/wishlist' as any)}
+        >
+          <Heart size={24} color={Colors.primary} />
+        </TouchableOpacity>
         <Text style={styles.customHeaderTitle}>Dashboard</Text>
         <TouchableOpacity 
           style={styles.headerButton}

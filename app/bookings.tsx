@@ -18,6 +18,7 @@ import {
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Colors from '@/constants/colors';
+import { useApp } from '@/contexts/AppContext';
 
 type BookingStatus = 'active' | 'completed' | 'cancelled' | 'pending';
 
@@ -34,18 +35,21 @@ interface Booking {
 
 export default function BookingsScreen() {
   const insets = useSafeAreaInsets();
+  const { bookings } = useApp();
   const [selectedFilter, setSelectedFilter] = useState<BookingStatus | 'all'>('all');
 
-  const mockBookings: Booking[] = [
+  const allBookings = [
+    ...bookings,
     {
       id: 'ORD-123456',
       campaignName: 'Summer Sale 2024',
       orderDate: '2024-01-15',
       startDate: '2024-02-01',
       endDate: '2024-03-01',
-      status: 'active',
+      status: 'active' as BookingStatus,
       amount: 250000,
       services: ['Billboards', 'Digital', 'Social Media'],
+      items: [],
     },
     {
       id: 'ORD-123455',
@@ -53,9 +57,10 @@ export default function BookingsScreen() {
       orderDate: '2024-01-10',
       startDate: '2024-01-20',
       endDate: '2024-02-20',
-      status: 'completed',
+      status: 'completed' as BookingStatus,
       amount: 180000,
       services: ['Print Media', 'Radio'],
+      items: [],
     },
     {
       id: 'ORD-123454',
@@ -63,9 +68,10 @@ export default function BookingsScreen() {
       orderDate: '2024-01-05',
       startDate: '2024-01-25',
       endDate: '2024-02-25',
-      status: 'pending',
+      status: 'pending' as BookingStatus,
       amount: 320000,
       services: ['Cinema', 'Influencers', 'Digital'],
+      items: [],
     },
   ];
 
@@ -78,8 +84,8 @@ export default function BookingsScreen() {
   ];
 
   const filteredBookings = selectedFilter === 'all'
-    ? mockBookings
-    : mockBookings.filter(b => b.status === selectedFilter);
+    ? allBookings
+    : allBookings.filter(b => b.status === selectedFilter);
 
   const getStatusIcon = (status: BookingStatus) => {
     switch (status) {

@@ -63,25 +63,22 @@ export default function HomeScreen() {
     const scrollDiff = currentScrollY - lastScrollY.current;
 
     if (currentScrollY <= 0) {
-      Animated.spring(headerTranslateY, {
+      Animated.timing(headerTranslateY, {
         toValue: 0,
+        duration: 200,
         useNativeDriver: true,
-        tension: 100,
-        friction: 10,
       }).start();
-    } else if (scrollDiff > 0 && currentScrollY > 50) {
-      Animated.spring(headerTranslateY, {
-        toValue: -120,
+    } else if (scrollDiff > 5 && currentScrollY > 80) {
+      Animated.timing(headerTranslateY, {
+        toValue: -160,
+        duration: 250,
         useNativeDriver: true,
-        tension: 100,
-        friction: 10,
       }).start();
-    } else if (scrollDiff < -5) {
-      Animated.spring(headerTranslateY, {
+    } else if (scrollDiff < -10) {
+      Animated.timing(headerTranslateY, {
         toValue: 0,
+        duration: 250,
         useNativeDriver: true,
-        tension: 100,
-        friction: 10,
       }).start();
     }
 
