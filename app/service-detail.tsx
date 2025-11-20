@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,10 @@ import {
   Image,
   Dimensions,
   ColorValue,
+  FlatList,
+  Animated,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -29,12 +33,137 @@ import { useApp } from '@/contexts/AppContext';
 
 const { width } = Dimensions.get('window');
 
+const getServiceImages = (serviceId: string) => {
+  const imageMap: { [key: string]: string[] } = {
+    '1': [
+      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80',
+      'https://images.unsplash.com/photo-1567427018141-0584cfcbf1b8?w=800&q=80',
+      'https://images.unsplash.com/photo-1599687267812-35c05ff70ee9?w=800&q=80',
+      'https://images.unsplash.com/photo-1552168324-d612d77725e3?w=800&q=80',
+    ],
+    '2': [
+      'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=800&q=80',
+      'https://images.unsplash.com/photo-1567427018141-0584cfcbf1b8?w=800&q=80',
+      'https://images.unsplash.com/photo-1599687267812-35c05ff70ee9?w=800&q=80',
+    ],
+    '3': [
+      'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80',
+      'https://images.unsplash.com/photo-1586339949216-35c2747cc36d?w=800&q=80',
+      'https://images.unsplash.com/photo-1495020689067-958852a7765e?w=800&q=80',
+    ],
+    '4': [
+      'https://images.unsplash.com/photo-1586339949216-35c2747cc36d?w=800&q=80',
+      'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80',
+      'https://images.unsplash.com/photo-1495020689067-958852a7765e?w=800&q=80',
+    ],
+    '5': [
+      'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800&q=80',
+      'https://images.unsplash.com/photo-1611162616305-c69b3037c834?w=800&q=80',
+      'https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=800&q=80',
+    ],
+    '6': [
+      'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80',
+      'https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?w=800&q=80',
+      'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80',
+    ],
+    '7': [
+      'https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=800&q=80',
+      'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=800&q=80',
+      'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=800&q=80',
+    ],
+    '8': [
+      'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&q=80',
+      'https://images.unsplash.com/photo-1598899134739-24c46f58b8c0?w=800&q=80',
+      'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=800&q=80',
+    ],
+    '9': [
+      'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&q=80',
+      'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&q=80',
+      'https://images.unsplash.com/photo-1557838923-2985c318be48?w=800&q=80',
+    ],
+    '10': [
+      'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&q=80',
+      'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&q=80',
+      'https://images.unsplash.com/photo-1557838923-2985c318be48?w=800&q=80',
+    ],
+  };
+  return imageMap[serviceId] || [adSpaces.find(s => s.id === serviceId)?.image || ''];
+};
+
+const getServiceHighlights = (serviceId: string) => {
+  const highlightMap: { [key: string]: string[] } = {
+    '1': [
+      '🏙️ Premium city center location',
+      '⚡ LED backlit display',
+      '🎯 500K+ daily impressions',
+      '⏰ 24/7 visibility guaranteed',
+    ],
+    '2': [
+      '🛣️ Highway prime spot',
+      '📏 Extra-large 40x20 ft format',
+      '🌧️ All-weather resistant',
+      '🚗 300K+ daily commuters',
+    ],
+    '3': [
+      '📰 Leading English daily',
+      '🎨 Full-color premium print',
+      '👥 2M+ engaged readers',
+      '🏆 Most trusted news brand',
+    ],
+    '4': [
+      '🌍 Pan-India reach',
+      '📈 5M+ daily readership',
+      '💼 Business-focused audience',
+      '🎯 High conversion rates',
+    ],
+    '5': [
+      '🎯 Precision audience targeting',
+      '📊 Real-time analytics',
+      '🔄 A/B testing included',
+      '💡 1M+ targeted impressions',
+    ],
+    '6': [
+      '🌐 Global reach potential',
+      '🔄 Retargeting capabilities',
+      '📈 2M+ impressions',
+      '⚡ Instant campaign activation',
+    ],
+    '7': [
+      '📻 Prime morning & evening slots',
+      '🎙️ Professional voiceover included',
+      '👥 800K+ daily listeners',
+      '🔄 10+ plays per day',
+    ],
+    '8': [
+      '🎬 Premium theater environment',
+      '📺 4K HD quality screening',
+      '👨‍👩‍👧‍👦 1.5M+ monthly viewers',
+      '🎯 100% captive audience',
+    ],
+    '9': [
+      '👨‍💻 Top tech influencers',
+      '💬 High engagement rate (8%+)',
+      '📱 Stories + Feed posts',
+      '🎥 500K+ loyal followers',
+    ],
+    '10': [
+      '🌟 Network of 10+ influencers',
+      '📹 Multi-platform coverage',
+      '💎 Content ownership rights',
+      '🚀 2M+ combined reach',
+    ],
+  };
+  return highlightMap[serviceId] || [];
+};
+
 export default function ServiceDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useApp();
   const [selectedDuration, setSelectedDuration] = useState(1);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const scrollX = useRef(new Animated.Value(0)).current;
 
   const service = adSpaces.find(s => s.id === id);
 
@@ -46,6 +175,15 @@ export default function ServiceDetailScreen() {
       </View>
     );
   }
+
+  const serviceImages = getServiceImages(service.id);
+  const serviceHighlights = getServiceHighlights(service.id);
+
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const contentOffsetX = event.nativeEvent.contentOffset.x;
+    const index = Math.round(contentOffsetX / width);
+    setCurrentImageIndex(index);
+  };
 
   const durations = [
     { label: '1 Week', value: 1, discount: 0 },
@@ -100,7 +238,21 @@ export default function ServiceDetailScreen() {
         contentContainerStyle={styles.contentContainer}
       >
         <View style={styles.imageContainer}>
-          <Image source={{ uri: service.image }} style={styles.image} />
+          <FlatList
+            data={serviceImages}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onScroll={Animated.event(
+              [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+              { useNativeDriver: false, listener: handleScroll }
+            )}
+            scrollEventThrottle={16}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item }) => (
+              <Image source={{ uri: item }} style={styles.image} />
+            )}
+          />
           <LinearGradient
             colors={['transparent', 'rgba(0,0,0,0.7)']}
             style={styles.imageGradient}
@@ -118,9 +270,32 @@ export default function ServiceDetailScreen() {
               <Text style={styles.imageLocationText}>{service.location}</Text>
             </View>
           </View>
+          {serviceImages.length > 1 && (
+            <View style={styles.paginationContainer}>
+              {serviceImages.map((_, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.paginationDot,
+                    index === currentImageIndex && styles.paginationDotActive,
+                  ]}
+                />
+              ))}
+            </View>
+          )}
         </View>
 
         <View style={styles.mainContent}>
+          {serviceHighlights.length > 0 && (
+            <View style={styles.highlightsSection}>
+              {serviceHighlights.map((highlight, index) => (
+                <View key={index} style={styles.highlightItem}>
+                  <Text style={styles.highlightText}>{highlight}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
               <View style={styles.statIcon}>
@@ -329,8 +504,8 @@ const styles = StyleSheet.create({
     position: 'relative' as const,
   },
   image: {
-    width: '100%',
-    height: '100%',
+    width: width,
+    height: 300,
   },
   imageGradient: {
     position: 'absolute' as const,
@@ -648,5 +823,43 @@ const styles = StyleSheet.create({
     color: Colors.text.secondary,
     textAlign: 'center' as const,
     marginTop: 100,
+  },
+  paginationContainer: {
+    position: 'absolute' as const,
+    bottom: 80,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+  },
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.5)',
+  },
+  paginationDotActive: {
+    width: 24,
+    backgroundColor: Colors.text.inverse,
+  },
+  highlightsSection: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+    ...Colors.shadow.small,
+    gap: 10,
+  },
+  highlightItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  highlightText: {
+    fontSize: 14,
+    color: Colors.text.primary,
+    lineHeight: 20,
+    fontWeight: '500' as const,
   },
 });
