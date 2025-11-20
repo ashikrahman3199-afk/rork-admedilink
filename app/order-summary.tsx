@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -26,6 +26,12 @@ export default function OrderSummaryScreen() {
   const [paymentOption, setPaymentOption] = useState<'callback' | 'advance' | null>(null);
   const [showDisclaimerModal, setShowDisclaimerModal] = useState(false);
   const [showCallbackModal, setShowCallbackModal] = useState(false);
+
+  useEffect(() => {
+    if (cart.length === 0) {
+      router.replace('/(tabs)/home');
+    }
+  }, [cart.length]);
 
   const totalAmount = Math.round(cartTotal * 1.23);
   const advanceAmount = Math.round(cartTotal * 0.1);
