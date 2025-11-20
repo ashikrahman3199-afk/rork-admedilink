@@ -81,7 +81,6 @@ export const [AppProvider, useApp] = createContextHook(() => {
     },
   ]);
   const [selectedLocation, setSelectedLocation] = useState('Anna Nagar');
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
 
   const addToCart = useCallback((adSpace: AdSpace, duration: number = 1) => {
     setCart(prev => {
@@ -211,16 +210,6 @@ export const [AppProvider, useApp] = createContextHook(() => {
     return wishlist.some(item => item.id === id);
   }, [wishlist]);
 
-  const logout = useCallback(() => {
-    setCart([]);
-    setWishlist([]);
-    setCampaigns([]);
-    setCurrentCampaign(null);
-    setBookings([]);
-    setPaymentMethods([]);
-    setIsLoggedIn(false);
-  }, []);
-
   return useMemo(() => ({
     cart,
     addToCart,
@@ -252,8 +241,5 @@ export const [AppProvider, useApp] = createContextHook(() => {
     unreadNotificationCount,
     selectedLocation,
     setSelectedLocation,
-    isLoggedIn,
-    setIsLoggedIn,
-    logout,
-  }), [cart, addToCart, removeFromCart, updateCartItemDuration, clearCart, wishlist, addToWishlist, removeFromWishlist, isInWishlist, campaigns, createCampaign, updateCampaign, deleteCampaign, currentCampaign, bookings, createBooking, updateBooking, paymentMethods, addPaymentMethod, removePaymentMethod, notifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification, selectedLocation, isLoggedIn, logout]);
+  }), [cart, addToCart, removeFromCart, updateCartItemDuration, clearCart, cartTotal, cartItemCount, wishlist, addToWishlist, removeFromWishlist, isInWishlist, campaigns, createCampaign, updateCampaign, deleteCampaign, currentCampaign, bookings, createBooking, updateBooking, paymentMethods, addPaymentMethod, removePaymentMethod, notifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification, unreadNotificationCount, selectedLocation]);
 });
