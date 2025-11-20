@@ -372,16 +372,16 @@ export default function HomeScreen() {
             </TouchableOpacity>
             <View style={styles.headerTopRight}>
               <TouchableOpacity 
-                style={[styles.iconButton, styles.iconCircle]}
-                onPress={() => router.push('/ai-recommendations')}
-              >
-                <Sparkles size={22} color={Colors.text.inverse} />
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.iconButton, styles.iconCircle]}
+                style={styles.iconButton}
                 onPress={() => router.push('/search' as any)}
               >
                 <Search size={22} color={Colors.text.inverse} />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.iconButton}
+                onPress={() => router.push('/ai-recommendations')}
+              >
+                <Sparkles size={22} color={Colors.text.inverse} />
               </TouchableOpacity>
               <TouchableOpacity 
                 style={styles.iconButton}
@@ -436,15 +436,12 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   iconButton: {
-    padding: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  iconCircle: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    borderRadius: 20,
     width: 40,
     height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   locationContainer: {
     flexDirection: 'row',
