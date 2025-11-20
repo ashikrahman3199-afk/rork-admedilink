@@ -9,6 +9,8 @@ import {
   Modal,
   Platform,
   ColorValue,
+  Image,
+  Alert,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -21,10 +23,13 @@ import {
   ShoppingBag,
   CheckCircle,
   Calendar as CalendarIcon,
+  Upload,
+  X,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Colors from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
+import * as ImagePicker from 'expo-image-picker';
 
 type Step = 'details' | 'objective' | 'design' | 'services' | 'review';
 
@@ -40,6 +45,7 @@ export default function CreateCampaignScreen() {
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [selectedObjective, setSelectedObjective] = useState<string | null>(null);
   const [designPreferences, setDesignPreferences] = useState<Map<string, string>>(new Map());
+  const [uploadedImages, setUploadedImages] = useState<Map<string, string[]>>(new Map());
 
   const steps = [
     { id: 'details' as Step, label: 'Details', icon: Package },
@@ -260,6 +266,36 @@ export default function CreateCampaignScreen() {
     </View>
   );
 
+  const pickImage = async (itemId: string) => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert('Permission Required', 'Please grant permission to access your photo library');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsMultipleSelection: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets) {
+      const newImages = result.assets.map(asset => asset.uri);
+      const currentImages = uploadedImages.get(itemId) || [];
+      const updatedImages = new Map(uploadedImages);
+      updatedImages.set(itemId, [...currentImages, ...newImages]);
+      setUploadedImages(updatedImages);
+    }
+  };
+
+  const removeImage = (itemId: string, imageUri: string) => {
+    const currentImages = uploadedImages.get(itemId) || [];
+    const updatedImages = new Map(uploadedImages);
+    updatedImages.set(itemId, currentImages.filter(uri => uri !== imageUri));
+    setUploadedImages(updatedImages);
+  };
+
   const renderDesignStep = () => (
     <View style={styles.stepContent}>
       <Text style={styles.stepTitle}>Design Preferences</Text>
@@ -269,10 +305,12 @@ export default function CreateCampaignScreen() {
 
       {cart.map((item) => {
         const currentPreference = designPreferences.get(item.id) || '';
+        const itemImages = uploadedImages.get(item.id) || [];
         return (
           <View key={item.id} style={styles.designServiceCard}>
             <Text style={styles.designServiceName}>{item.title}</Text>
             <Text style={styles.designServiceLocation}>{item.location}</Text>
+            
             <TextInput
               style={[styles.input, styles.textArea]}
               placeholder="Describe design requirements for this service..."
@@ -287,6 +325,33 @@ export default function CreateCampaignScreen() {
               numberOfLines={4}
               textAlignVertical="top"
             />
+
+            <TouchableOpacity
+              style={styles.uploadButton}
+              onPress={() => pickImage(item.id)}
+            >
+              <Upload size={20} color={Colors.primary} />
+              <Text style={styles.uploadButtonText}>Upload Your Design</Text>
+            </TouchableOpacity>
+
+            {itemImages.length > 0 && (
+              <View style={styles.uploadedImagesContainer}>
+                <Text style={styles.uploadedImagesTitle}>Uploaded Designs:</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imagesList}>
+                  {itemImages.map((uri, index) => (
+                    <View key={index} style={styles.imageWrapper}>
+                      <Image source={{ uri }} style={styles.uploadedImage} />
+                      <TouchableOpacity
+                        style={styles.removeImageButton}
+                        onPress={() => removeImage(item.id, uri)}
+                      >
+                        <X size={14} color={Colors.text.inverse} />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
           </View>
         );
       })}
@@ -771,5 +836,57 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700' as const,
     color: Colors.text.inverse,
+  },
+  uploadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: `${Colors.primary}15`,
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 12,
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
+    borderStyle: 'dashed' as const,
+  },
+  uploadButtonText: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: Colors.primary,
+  },
+  uploadedImagesContainer: {
+    marginTop: 16,
+  },
+  uploadedImagesTitle: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: Colors.text.secondary,
+    marginBottom: 8,
+  },
+  imagesList: {
+    flexDirection: 'row',
+  },
+  imageWrapper: {
+    position: 'relative' as const,
+    marginRight: 12,
+  },
+  uploadedImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 12,
+    backgroundColor: Colors.border.light,
+  },
+  removeImageButton: {
+    position: 'absolute' as const,
+    top: -6,
+    right: -6,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: Colors.error,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Colors.shadow.medium,
   },
 });
