@@ -372,19 +372,19 @@ export default function HomeScreen() {
             </TouchableOpacity>
             <View style={styles.headerTopRight}>
               <TouchableOpacity 
-                style={styles.searchIconButton}
-                onPress={() => router.push('/search' as any)}
-              >
-                <Search size={22} color={Colors.text.inverse} />
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.aiIconButton}
+                style={styles.iconButton}
                 onPress={() => router.push('/ai-recommendations')}
               >
                 <Sparkles size={22} color={Colors.text.inverse} />
               </TouchableOpacity>
               <TouchableOpacity 
-                style={styles.notificationButton}
+                style={styles.iconButton}
+                onPress={() => router.push('/search' as any)}
+              >
+                <Search size={22} color={Colors.text.inverse} />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.iconButton}
                 onPress={() => router.push('/notifications')}
               >
                 <Bell size={22} color={Colors.text.inverse} />
@@ -435,19 +435,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 16,
   },
-  searchIconButton: {
+  iconButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  aiIconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(139, 92, 246, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -461,9 +453,7 @@ const styles = StyleSheet.create({
     fontWeight: '600' as const,
     color: Colors.text.inverse,
   },
-  notificationButton: {
-    position: 'relative' as const,
-  },
+
   badge: {
     position: 'absolute' as const,
     top: -4,
