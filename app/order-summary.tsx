@@ -308,14 +308,14 @@ export default function OrderSummaryScreen() {
                 style={styles.callbackConfirmButton}
                 onPress={() => {
                   setShowCallbackModal(false);
-                  router.push('/bookings');
+                  router.push('/(tabs)/home');
                 }}
               >
                 <LinearGradient
                   colors={Colors.gradient.primary as unknown as readonly [ColorValue, ColorValue, ...ColorValue[]]}
                   style={styles.callbackConfirmGradient}
                 >
-                  <Text style={styles.callbackConfirmText}>View Bookings</Text>
+                  <Text style={styles.callbackConfirmText}>Go to Homepage</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
