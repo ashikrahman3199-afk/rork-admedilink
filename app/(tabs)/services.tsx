@@ -10,6 +10,7 @@ import {
   ColorValue,
   Modal,
   Animated,
+  PanResponder,
 } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -34,7 +35,7 @@ import { adSpaces, categories, AdCategory } from '@/constants/adSpaces';
 import { useApp } from '@/contexts/AppContext';
 
 const { width } = Dimensions.get('window');
-const HEADER_HEIGHT = 180;
+const HEADER_HEIGHT = 200;
 
 export default function ServicesScreen() {
   const router = useRouter();
@@ -49,9 +50,23 @@ export default function ServicesScreen() {
   const scrollY = useRef(new Animated.Value(0)).current;
   const headerTranslateY = scrollY.interpolate({
     inputRange: [0, HEADER_HEIGHT],
-    outputRange: [0, -(HEADER_HEIGHT + insets.top + 10)],
+    outputRange: [0, -(HEADER_HEIGHT + insets.top)],
     extrapolate: 'clamp',
   });
+
+  const categoryFabPan = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+  const categoryFabPanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderMove: Animated.event(
+        [null, { dx: categoryFabPan.x, dy: categoryFabPan.y }],
+        { useNativeDriver: false }
+      ),
+      onPanResponderRelease: () => {
+        categoryFabPan.extractOffset();
+      },
+    })
+  ).current;
 
   useEffect(() => {
     if (params.category && typeof params.category === 'string') {
@@ -142,12 +157,11 @@ export default function ServicesScreen() {
 
       <Animated.View style={[
         styles.headerContainer,
-        { paddingTop: insets.top, top: 0 },
         { transform: [{ translateY: headerTranslateY }] }
       ]}>
         <LinearGradient
           colors={Colors.gradient.primary as unknown as readonly [ColorValue, ColorValue, ...ColorValue[]]}
-          style={styles.header}
+          style={[styles.header, { paddingTop: insets.top + 20 }]}
         >
           <View style={styles.headerTop}>
             <TouchableOpacity 
@@ -188,17 +202,30 @@ export default function ServicesScreen() {
         </LinearGradient>
       </Animated.View>
 
-      <TouchableOpacity
-        style={styles.floatingCategoryButton}
-        onPress={() => setShowCategoryMenu(true)}
+      <Animated.View
+        style={[
+          styles.floatingCategoryButton,
+          {
+            transform: [
+              { translateX: categoryFabPan.x },
+              { translateY: categoryFabPan.y },
+            ],
+          },
+        ]}
+        {...categoryFabPanResponder.panHandlers}
       >
-        <LinearGradient
-          colors={Colors.gradient.primary as unknown as readonly [ColorValue, ColorValue, ...ColorValue[]]}
-          style={styles.floatingButtonGradient}
+        <TouchableOpacity
+          onPress={() => setShowCategoryMenu(true)}
+          activeOpacity={0.8}
         >
-          <Grid3x3 size={24} color={Colors.text.inverse} />
-        </LinearGradient>
-      </TouchableOpacity>
+          <LinearGradient
+            colors={Colors.gradient.primary as unknown as readonly [ColorValue, ColorValue, ...ColorValue[]]}
+            style={styles.floatingButtonGradient}
+          >
+            <Grid3x3 size={24} color={Colors.text.inverse} />
+          </LinearGradient>
+        </TouchableOpacity>
+      </Animated.View>
 
       <Modal
         visible={showCategoryMenu}
@@ -377,7 +404,6 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 24,
-    paddingTop: 20,
     paddingBottom: 24,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,

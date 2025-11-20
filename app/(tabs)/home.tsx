@@ -9,6 +9,7 @@ import {
   Dimensions,
   ColorValue,
   Animated,
+  PanResponder,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -34,7 +35,7 @@ import { useApp } from '@/contexts/AppContext';
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width - 48;
 
-const HEADER_HEIGHT = 180;
+const HEADER_HEIGHT = 200;
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -44,9 +45,23 @@ export default function HomeScreen() {
   const scrollY = useRef(new Animated.Value(0)).current;
   const headerTranslateY = scrollY.interpolate({
     inputRange: [0, HEADER_HEIGHT],
-    outputRange: [0, -(HEADER_HEIGHT + insets.top + 10)],
+    outputRange: [0, -(HEADER_HEIGHT + insets.top)],
     extrapolate: 'clamp',
   });
+
+  const aiFabPan = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+  const aiFabPanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderMove: Animated.event(
+        [null, { dx: aiFabPan.x, dy: aiFabPan.y }],
+        { useNativeDriver: false }
+      ),
+      onPanResponderRelease: () => {
+        aiFabPan.extractOffset();
+      },
+    })
+  ).current;
 
   const filteredSpaces = adSpaces.filter(space => {
     const matchesCategory = selectedCategory === 'all' || space.category === selectedCategory;
@@ -354,13 +369,12 @@ export default function HomeScreen() {
       </ScrollView>
 
       <Animated.View style={[
-        styles.headerContainer, 
-        { paddingTop: insets.top, top: 0 },
+        styles.headerContainer,
         { transform: [{ translateY: headerTranslateY }] }
       ]}>
         <LinearGradient
           colors={Colors.gradient.primary as unknown as readonly [ColorValue, ColorValue, ...ColorValue[]]}
-          style={styles.header}
+          style={[styles.header, { paddingTop: insets.top + 20 }]}
         >
           <View style={styles.headerTop}>
             <TouchableOpacity 
@@ -395,17 +409,30 @@ export default function HomeScreen() {
         </LinearGradient>
       </Animated.View>
 
-      <TouchableOpacity
-        style={styles.aiFab}
-        onPress={() => router.push('/ai-recommendations')}
+      <Animated.View
+        style={[
+          styles.aiFab,
+          {
+            transform: [
+              { translateX: aiFabPan.x },
+              { translateY: aiFabPan.y },
+            ],
+          },
+        ]}
+        {...aiFabPanResponder.panHandlers}
       >
-        <LinearGradient
-          colors={['#8B5CF6', '#6366F1'] as unknown as readonly [ColorValue, ColorValue, ...ColorValue[]]}
-          style={styles.aiFabGradient}
+        <TouchableOpacity
+          onPress={() => router.push('/ai-recommendations')}
+          activeOpacity={0.8}
         >
-          <Sparkles size={24} color={Colors.text.inverse} />
-        </LinearGradient>
-      </TouchableOpacity>
+          <LinearGradient
+            colors={['#8B5CF6', '#6366F1'] as unknown as readonly [ColorValue, ColorValue, ...ColorValue[]]}
+            style={styles.aiFabGradient}
+          >
+            <Sparkles size={24} color={Colors.text.inverse} />
+          </LinearGradient>
+        </TouchableOpacity>
+      </Animated.View>
     </View>
   );
 }
@@ -424,7 +451,6 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 24,
-    paddingTop: 20,
     paddingBottom: 24,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,

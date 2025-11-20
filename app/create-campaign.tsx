@@ -402,7 +402,7 @@ export default function CreateCampaignScreen() {
           style={styles.continueButton}
           onPress={() => {
             if (currentStep === 'review') {
-              router.push('/custom-bundle');
+              router.push('/order-summary');
             } else {
               handleNext();
             }

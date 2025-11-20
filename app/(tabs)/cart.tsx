@@ -19,11 +19,11 @@ import { useApp } from '@/contexts/AppContext';
 export default function CartScreen() {
   const { cart, removeFromCart, updateCartItemDuration, cartTotal, clearCart } = useApp();
   const insets = useSafeAreaInsets();
-  const HEADER_HEIGHT = 80;
+  const HEADER_HEIGHT = 100;
   const scrollY = useRef(new Animated.Value(0)).current;
   const headerTranslateY = scrollY.interpolate({
     inputRange: [0, HEADER_HEIGHT],
-    outputRange: [0, -(HEADER_HEIGHT + insets.top + 24)],
+    outputRange: [0, -(HEADER_HEIGHT + insets.top)],
     extrapolate: 'clamp',
   });
 
@@ -31,7 +31,7 @@ export default function CartScreen() {
     return (
       <View style={styles.container}>
         <Stack.Screen options={{ headerShown: false }} />
-        <View style={[styles.emptyContainer, { paddingTop: HEADER_HEIGHT + insets.top }]}>
+        <View style={[styles.emptyContainer, { paddingTop: HEADER_HEIGHT + insets.top + 20 }]}>
           <ShoppingBag size={80} color={Colors.text.tertiary} strokeWidth={1.5} />
           <Text style={styles.emptyTitle}>Your cart is empty</Text>
           <Text style={styles.emptySubtitle}>Add ad spaces to get started</Text>
@@ -57,7 +57,7 @@ export default function CartScreen() {
       <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.contentContainer, { paddingTop: HEADER_HEIGHT + insets.top }]}
+        contentContainerStyle={[styles.contentContainer, { paddingTop: HEADER_HEIGHT + insets.top + 20 }]}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { useNativeDriver: true }
@@ -152,14 +152,12 @@ export default function CartScreen() {
       <Animated.View style={[
         styles.customHeader,
         {
-          paddingTop: insets.top + 12,
+          paddingTop: insets.top + 20,
           transform: [{ translateY: headerTranslateY }],
         },
       ]}>
         <Text style={styles.customHeaderTitle}>Cart</Text>
-        <TouchableOpacity onPress={clearCart} style={styles.clearButton}>
-          <Text style={styles.clearButtonText}>Clear All</Text>
-        </TouchableOpacity>
+        <View style={{ width: 80 }} />
       </Animated.View>
 
       <View style={styles.footer}>
