@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,9 @@ import {
   TextInput,
   ActivityIndicator,
   ColorValue,
+  Animated,
+  PanResponder,
+  Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
@@ -25,12 +28,49 @@ interface Recommendation {
   confidence: number;
 }
 
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
 export default function AIRecommendationsScreen() {
   const router = useRouter();
   const { cart, cartTotal } = useApp();
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  
+  const pan = useRef(new Animated.ValueXY({ x: screenWidth - 80, y: screenHeight - 200 })).current;
+  
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: () => {
+        pan.setOffset({
+          x: (pan.x as any)._value,
+          y: (pan.y as any)._value,
+        });
+        pan.setValue({ x: 0, y: 0 });
+      },
+      onPanResponderMove: Animated.event(
+        [null, { dx: pan.x, dy: pan.y }],
+        { useNativeDriver: false }
+      ),
+      onPanResponderRelease: (_, gesture) => {
+        pan.flattenOffset();
+        
+        const currentX = (pan.x as any)._value;
+        const currentY = (pan.y as any)._value;
+        
+        const boundedX = Math.max(0, Math.min(currentX, screenWidth - 64));
+        const boundedY = Math.max(0, Math.min(currentY, screenHeight - 200));
+        
+        Animated.spring(pan, {
+          toValue: { x: boundedX, y: boundedY },
+          useNativeDriver: false,
+          friction: 7,
+        }).start();
+      },
+    })
+  ).current;
 
   const handleGetRecommendations = async () => {
     if (!input.trim()) return;
@@ -85,6 +125,23 @@ Only return the JSON array, no other text.`;
           headerShown: true,
         }} 
       />
+      
+      <Animated.View
+        {...panResponder.panHandlers}
+        style={[
+          styles.floatingButton,
+          {
+            transform: [
+              { translateX: pan.x },
+              { translateY: pan.y },
+            ],
+          },
+        ]}
+      >
+        <View style={styles.floatingButtonInner}>
+          <Sparkles size={28} color={Colors.text.inverse} strokeWidth={2} />
+        </View>
+      </Animated.View>
       
       <ScrollView
         style={styles.content}
@@ -389,5 +446,20 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 32,
+  },
+  floatingButton: {
+    position: 'absolute' as const,
+    width: 64,
+    height: 64,
+    zIndex: 1000,
+  },
+  floatingButtonInner: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Colors.shadow.large,
   },
 });

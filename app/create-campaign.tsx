@@ -38,6 +38,8 @@ export default function CreateCampaignScreen() {
   const [endDate, setEndDate] = useState(new Date(2026, 0, 11));
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [selectedObjective, setSelectedObjective] = useState<string | null>(null);
+  const [designPreferences, setDesignPreferences] = useState<Map<string, string>>(new Map());
 
   const steps = [
     { id: 'details' as Step, label: 'Details', icon: Package },
@@ -232,8 +234,26 @@ export default function CreateCampaignScreen() {
 
       <View style={styles.optionsGrid}>
         {['Brand Awareness', 'Lead Generation', 'Product Launch', 'Sales'].map(objective => (
-          <TouchableOpacity key={objective} style={styles.optionCard}>
-            <Text style={styles.optionText}>{objective}</Text>
+          <TouchableOpacity 
+            key={objective} 
+            style={[
+              styles.optionCard,
+              selectedObjective === objective && styles.optionCardSelected,
+            ]}
+            onPress={() => setSelectedObjective(objective)}
+          >
+            <View style={[
+              styles.optionRadio,
+              selectedObjective === objective && styles.optionRadioSelected,
+            ]}>
+              {selectedObjective === objective && (
+                <View style={styles.optionRadioDot} />
+              )}
+            </View>
+            <Text style={[
+              styles.optionText,
+              selectedObjective === objective && styles.optionTextSelected,
+            ]}>{objective}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -244,17 +264,32 @@ export default function CreateCampaignScreen() {
     <View style={styles.stepContent}>
       <Text style={styles.stepTitle}>Design Preferences</Text>
       <Text style={styles.stepDescription}>
-        Share your design requirements and preferences
+        Share your design requirements for each service
       </Text>
 
-      <TextInput
-        style={[styles.input, styles.textArea]}
-        placeholder="Describe your design requirements..."
-        placeholderTextColor={Colors.text.tertiary}
-        multiline
-        numberOfLines={6}
-        textAlignVertical="top"
-      />
+      {cart.map((item) => {
+        const currentPreference = designPreferences.get(item.id) || '';
+        return (
+          <View key={item.id} style={styles.designServiceCard}>
+            <Text style={styles.designServiceName}>{item.title}</Text>
+            <Text style={styles.designServiceLocation}>{item.location}</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="Describe design requirements for this service..."
+              placeholderTextColor={Colors.text.tertiary}
+              value={currentPreference}
+              onChangeText={(text) => {
+                const newPreferences = new Map(designPreferences);
+                newPreferences.set(item.id, text);
+                setDesignPreferences(newPreferences);
+              }}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
+          </View>
+        );
+      })}
     </View>
   );
 
@@ -589,6 +624,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   optionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: 20,
@@ -596,11 +633,56 @@ const styles = StyleSheet.create({
     borderColor: Colors.border.light,
     ...Colors.shadow.small,
   },
+  optionCardSelected: {
+    borderColor: Colors.primary,
+    backgroundColor: `${Colors.primary}08`,
+  },
+  optionRadio: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: Colors.border.light,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  optionRadioSelected: {
+    borderColor: Colors.primary,
+  },
+  optionRadioDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: Colors.primary,
+  },
   optionText: {
     fontSize: 16,
     fontWeight: '600' as const,
     color: Colors.text.primary,
-    textAlign: 'center' as const,
+    flex: 1,
+  },
+  optionTextSelected: {
+    color: Colors.primary,
+  },
+  designServiceCard: {
+    marginBottom: 20,
+    padding: 16,
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+  },
+  designServiceName: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: Colors.text.primary,
+    marginBottom: 4,
+  },
+  designServiceLocation: {
+    fontSize: 13,
+    color: Colors.text.secondary,
+    marginBottom: 12,
   },
   serviceCard: {
     flexDirection: 'row',

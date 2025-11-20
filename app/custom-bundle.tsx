@@ -29,7 +29,7 @@ import { useApp } from '@/contexts/AppContext';
 
 export default function CustomBundleScreen() {
   const insets = useSafeAreaInsets();
-  const { cart, cartTotal, createBooking } = useApp();
+  const { cart, cartTotal, createBooking, clearCart } = useApp();
   const [paymentOption, setPaymentOption] = useState<'callback' | 'advance' | null>(null);
   const [showDisclaimerModal, setShowDisclaimerModal] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
@@ -78,6 +78,7 @@ export default function CustomBundleScreen() {
         services: cart.map(item => item.title),
         items: cart,
       });
+      clearCart();
       Alert.alert(
         'Request Sent!',
         'Our team will review your package and contact you shortly with final pricing and next steps.',
@@ -90,6 +91,16 @@ export default function CustomBundleScreen() {
 
   const handleAdvancePayment = () => {
     setShowDisclaimerModal(false);
+    const newBooking = createBooking({
+      campaignName: 'Custom Bundle Campaign',
+      startDate: new Date(Date.now() + 86400000 * 7).toISOString(),
+      endDate: new Date(Date.now() + 86400000 * 37).toISOString(),
+      status: 'pending',
+      amount: totalAmount,
+      services: cart.map(item => item.title),
+      items: cart,
+    });
+    clearCart();
     router.push('/payment');
   };
 
