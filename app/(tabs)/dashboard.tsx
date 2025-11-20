@@ -54,30 +54,29 @@ export default function DashboardScreen() {
     }
   };
 
+  const HEADER_HEIGHT = 80;
+
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const currentScrollY = event.nativeEvent.contentOffset.y;
     const scrollDiff = currentScrollY - lastScrollY.current;
 
     if (currentScrollY <= 0) {
-      Animated.spring(headerTranslateY, {
+      Animated.timing(headerTranslateY, {
         toValue: 0,
+        duration: 250,
         useNativeDriver: true,
-        tension: 100,
-        friction: 10,
       }).start();
-    } else if (scrollDiff > 0 && currentScrollY > 50) {
-      Animated.spring(headerTranslateY, {
-        toValue: -80,
+    } else if (scrollDiff > 2 && currentScrollY > 40) {
+      Animated.timing(headerTranslateY, {
+        toValue: -(HEADER_HEIGHT + insets.top + 24),
+        duration: 250,
         useNativeDriver: true,
-        tension: 100,
-        friction: 10,
       }).start();
-    } else if (scrollDiff < -5) {
-      Animated.spring(headerTranslateY, {
+    } else if (scrollDiff < -2) {
+      Animated.timing(headerTranslateY, {
         toValue: 0,
+        duration: 250,
         useNativeDriver: true,
-        tension: 100,
-        friction: 10,
       }).start();
     }
 
