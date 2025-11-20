@@ -9,7 +9,6 @@ import {
   Dimensions,
   ColorValue,
   Animated,
-  PanResponder,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -48,21 +47,6 @@ export default function HomeScreen() {
     outputRange: [0, -(HEADER_HEIGHT + insets.top)],
     extrapolate: 'clamp',
   });
-
-  const aiFabPan = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
-  const aiFabPanResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onPanResponderMove: Animated.event(
-        [null, { dx: aiFabPan.x, dy: aiFabPan.y }],
-        { useNativeDriver: false }
-      ),
-      onPanResponderRelease: () => {
-        aiFabPan.extractOffset();
-      },
-    })
-  ).current;
-
 
 
   const filteredSpaces = adSpaces.filter(space => {
@@ -394,6 +378,12 @@ export default function HomeScreen() {
                 <Search size={22} color={Colors.text.inverse} />
               </TouchableOpacity>
               <TouchableOpacity 
+                style={styles.aiIconButton}
+                onPress={() => router.push('/ai-recommendations')}
+              >
+                <Sparkles size={22} color={Colors.text.inverse} />
+              </TouchableOpacity>
+              <TouchableOpacity 
                 style={styles.notificationButton}
                 onPress={() => router.push('/notifications')}
               >
@@ -411,30 +401,7 @@ export default function HomeScreen() {
         </LinearGradient>
       </Animated.View>
 
-      <Animated.View
-        style={[
-          styles.aiFab,
-          {
-            transform: [
-              { translateX: aiFabPan.x },
-              { translateY: aiFabPan.y },
-            ],
-          },
-        ]}
-      >
-        <TouchableOpacity
-          onPress={() => router.push('/ai-recommendations')}
-          activeOpacity={0.8}
-          {...aiFabPanResponder.panHandlers}
-        >
-          <LinearGradient
-            colors={['#8B5CF6', '#6366F1'] as unknown as readonly [ColorValue, ColorValue, ...ColorValue[]]}
-            style={styles.aiFabGradient}
-          >
-            <Sparkles size={24} color={Colors.text.inverse} />
-          </LinearGradient>
-        </TouchableOpacity>
-      </Animated.View>
+
     </View>
   );
 }
@@ -473,6 +440,14 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  aiIconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(139, 92, 246, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -774,19 +749,5 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 100,
-  },
-  aiFab: {
-    position: 'absolute' as const,
-    bottom: 100,
-    right: 24,
-    borderRadius: 28,
-    overflow: 'hidden',
-    ...Colors.shadow.large,
-  },
-  aiFabGradient: {
-    width: 56,
-    height: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });
