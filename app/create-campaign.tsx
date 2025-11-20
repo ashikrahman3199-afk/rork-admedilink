@@ -35,7 +35,7 @@ type Step = 'details' | 'objective' | 'design' | 'services' | 'review';
 
 export default function CreateCampaignScreen() {
   const insets = useSafeAreaInsets();
-  const { cart, cartTotal } = useApp();
+  const { cart, cartTotal, removeFromCart } = useApp();
   const [currentStep, setCurrentStep] = useState<Step>('details');
   
   const [campaignName, setCampaignName] = useState('Summer sale');
@@ -164,10 +164,18 @@ export default function CreateCampaignScreen() {
         <Text style={styles.cartSummaryTitle}>Cart Items</Text>
         {cart.map((item, index) => (
           <View key={item.id} style={styles.cartItem}>
-            <Text style={styles.cartItemName} numberOfLines={1}>{item.title}</Text>
-            <Text style={styles.cartItemPrice}>
-              ₹{(item.price * item.duration * item.quantity).toLocaleString('en-IN')}
-            </Text>
+            <View style={styles.cartItemInfo}>
+              <Text style={styles.cartItemName} numberOfLines={1}>{item.title}</Text>
+              <Text style={styles.cartItemPrice}>
+                ₹{(item.price * item.duration * item.quantity).toLocaleString('en-IN')}
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={() => removeFromCart(item.id)}
+            >
+              <X size={18} color={Colors.error} />
+            </TouchableOpacity>
           </View>
         ))}
       </View>
@@ -674,6 +682,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
   },
+  cartItemInfo: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginRight: 12,
+  },
   cartItemName: {
     flex: 1,
     fontSize: 14,
@@ -684,6 +699,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600' as const,
     color: Colors.primary,
+  },
+  deleteButton: {
+    padding: 4,
+    borderRadius: 8,
+    backgroundColor: `${Colors.error}10`,
   },
   optionsGrid: {
     gap: 12,
