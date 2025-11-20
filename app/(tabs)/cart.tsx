@@ -24,6 +24,8 @@ export default function CartScreen() {
   const lastScrollY = useRef(0);
   const headerTranslateY = useRef(new Animated.Value(0)).current;
 
+  const HEADER_HEIGHT = 80;
+
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const currentScrollY = event.nativeEvent.contentOffset.y;
     const scrollDiff = currentScrollY - lastScrollY.current;
@@ -32,22 +34,22 @@ export default function CartScreen() {
       Animated.spring(headerTranslateY, {
         toValue: 0,
         useNativeDriver: true,
-        tension: 100,
-        friction: 10,
+        damping: 20,
+        stiffness: 90,
       }).start();
-    } else if (scrollDiff > 0 && currentScrollY > 50) {
+    } else if (scrollDiff > 3 && currentScrollY > 50) {
       Animated.spring(headerTranslateY, {
-        toValue: -80,
+        toValue: -HEADER_HEIGHT,
         useNativeDriver: true,
-        tension: 100,
-        friction: 10,
+        damping: 20,
+        stiffness: 90,
       }).start();
-    } else if (scrollDiff < -5) {
+    } else if (scrollDiff < -3) {
       Animated.spring(headerTranslateY, {
         toValue: 0,
         useNativeDriver: true,
-        tension: 100,
-        friction: 10,
+        damping: 20,
+        stiffness: 90,
       }).start();
     }
 
@@ -58,6 +60,11 @@ export default function CartScreen() {
     return (
       <View style={styles.container}>
         <Stack.Screen options={{ headerShown: false }} />
+        <View style={[styles.emptyContainer, { paddingTop: HEADER_HEIGHT + insets.top }]}>
+          <ShoppingBag size={80} color={Colors.text.tertiary} strokeWidth={1.5} />
+          <Text style={styles.emptyTitle}>Your cart is empty</Text>
+          <Text style={styles.emptySubtitle}>Add ad spaces to get started</Text>
+        </View>
         <Animated.View style={[
           styles.customHeader,
           {
@@ -68,11 +75,6 @@ export default function CartScreen() {
           <Text style={styles.customHeaderTitle}>Cart</Text>
           <View style={{ width: 80 }} />
         </Animated.View>
-        <View style={styles.emptyContainer}>
-          <ShoppingBag size={80} color={Colors.text.tertiary} strokeWidth={1.5} />
-          <Text style={styles.emptyTitle}>Your cart is empty</Text>
-          <Text style={styles.emptySubtitle}>Add ad spaces to get started</Text>
-        </View>
       </View>
     );
   }
@@ -81,23 +83,10 @@ export default function CartScreen() {
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       
-      <Animated.View style={[
-        styles.customHeader,
-        {
-          paddingTop: insets.top + 12,
-          transform: [{ translateY: headerTranslateY }],
-        },
-      ]}>
-        <Text style={styles.customHeaderTitle}>Cart</Text>
-        <TouchableOpacity onPress={clearCart} style={styles.clearButton}>
-          <Text style={styles.clearButtonText}>Clear All</Text>
-        </TouchableOpacity>
-      </Animated.View>
-      
       <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.contentContainer}
+        contentContainerStyle={[styles.contentContainer, { paddingTop: HEADER_HEIGHT + insets.top }]}
         onScroll={handleScroll}
         scrollEventThrottle={16}
       >
@@ -186,6 +175,19 @@ export default function CartScreen() {
         <View style={styles.bottomSpacer} />
       </ScrollView>
 
+      <Animated.View style={[
+        styles.customHeader,
+        {
+          paddingTop: insets.top + 12,
+          transform: [{ translateY: headerTranslateY }],
+        },
+      ]}>
+        <Text style={styles.customHeaderTitle}>Cart</Text>
+        <TouchableOpacity onPress={clearCart} style={styles.clearButton}>
+          <Text style={styles.clearButtonText}>Clear All</Text>
+        </TouchableOpacity>
+      </Animated.View>
+
       <View style={styles.footer}>
         <View style={styles.footerContent}>
           <View>
@@ -212,6 +214,11 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   customHeader: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
     backgroundColor: Colors.surface,
     paddingBottom: 12,
     paddingHorizontal: 16,
@@ -231,7 +238,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 0,
+    paddingBottom: 16,
   },
   emptyContainer: {
     flex: 1,

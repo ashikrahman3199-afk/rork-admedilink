@@ -58,27 +58,32 @@ export default function HomeScreen() {
     { id: '4', title: 'Cinema Advertising Package', type: 'Featured', image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&h=600', serviceId: '8' },
   ];
 
+  const HEADER_HEIGHT = 180;
+
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const currentScrollY = event.nativeEvent.contentOffset.y;
     const scrollDiff = currentScrollY - lastScrollY.current;
 
     if (currentScrollY <= 0) {
-      Animated.timing(headerTranslateY, {
+      Animated.spring(headerTranslateY, {
         toValue: 0,
-        duration: 200,
         useNativeDriver: true,
+        damping: 20,
+        stiffness: 90,
       }).start();
-    } else if (scrollDiff > 5 && currentScrollY > 80) {
-      Animated.timing(headerTranslateY, {
-        toValue: -160,
-        duration: 250,
+    } else if (scrollDiff > 3 && currentScrollY > 50) {
+      Animated.spring(headerTranslateY, {
+        toValue: -HEADER_HEIGHT,
         useNativeDriver: true,
+        damping: 20,
+        stiffness: 90,
       }).start();
-    } else if (scrollDiff < -10) {
-      Animated.timing(headerTranslateY, {
+    } else if (scrollDiff < -3) {
+      Animated.spring(headerTranslateY, {
         toValue: 0,
-        duration: 250,
         useNativeDriver: true,
+        damping: 20,
+        stiffness: 90,
       }).start();
     }
 
@@ -89,48 +94,10 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       
-      <Animated.View style={[{ transform: [{ translateY: headerTranslateY }] }]}>
-        <LinearGradient
-          colors={Colors.gradient.primary as unknown as readonly [ColorValue, ColorValue, ...ColorValue[]]}
-          style={[styles.header, { paddingTop: insets.top + 20 }]}
-        >
-        <View style={styles.headerTop}>
-          <TouchableOpacity 
-            style={styles.locationContainer}
-            onPress={() => router.push('/location-selector')}
-          >
-            <MapPin size={20} color={Colors.text.inverse} />
-            <Text style={styles.locationText}>{selectedLocation}</Text>
-          </TouchableOpacity>
-          <View style={styles.headerTopRight}>
-            <TouchableOpacity 
-              style={styles.searchIconButton}
-              onPress={() => router.push('/search' as any)}
-            >
-              <Search size={22} color={Colors.text.inverse} />
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.notificationButton}
-              onPress={() => router.push('/notifications')}
-            >
-              <Bell size={22} color={Colors.text.inverse} />
-              {unreadNotificationCount > 0 && (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{unreadNotificationCount}</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <Text style={styles.headerTitle}>Find Perfect{'\n'}Ad Spaces</Text>
-        </LinearGradient>
-      </Animated.View>
-
       <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.contentContainer}
+        contentContainerStyle={[styles.contentContainer, { paddingTop: HEADER_HEIGHT + insets.top }]}
         onScroll={handleScroll}
         scrollEventThrottle={16}
       >
@@ -411,6 +378,48 @@ export default function HomeScreen() {
         <View style={styles.bottomSpacer} />
       </ScrollView>
 
+      <Animated.View style={[
+        styles.headerContainer, 
+        { paddingTop: insets.top, top: 0 },
+        { transform: [{ translateY: headerTranslateY }] }
+      ]}>
+        <LinearGradient
+          colors={Colors.gradient.primary as unknown as readonly [ColorValue, ColorValue, ...ColorValue[]]}
+          style={styles.header}
+        >
+          <View style={styles.headerTop}>
+            <TouchableOpacity 
+              style={styles.locationContainer}
+              onPress={() => router.push('/location-selector')}
+            >
+              <MapPin size={20} color={Colors.text.inverse} />
+              <Text style={styles.locationText}>{selectedLocation}</Text>
+            </TouchableOpacity>
+            <View style={styles.headerTopRight}>
+              <TouchableOpacity 
+                style={styles.searchIconButton}
+                onPress={() => router.push('/search' as any)}
+              >
+                <Search size={22} color={Colors.text.inverse} />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.notificationButton}
+                onPress={() => router.push('/notifications')}
+              >
+                <Bell size={22} color={Colors.text.inverse} />
+                {unreadNotificationCount > 0 && (
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>{unreadNotificationCount}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <Text style={styles.headerTitle}>Find Perfect{'\n'}Ad Spaces</Text>
+        </LinearGradient>
+      </Animated.View>
+
       <TouchableOpacity
         style={styles.aiFab}
         onPress={() => router.push('/ai-recommendations')}
@@ -431,8 +440,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
+  headerContainer: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+  },
   header: {
     paddingHorizontal: 24,
+    paddingTop: 20,
     paddingBottom: 24,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
@@ -496,7 +513,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    paddingTop: 24,
+    paddingTop: 0,
+    paddingBottom: 24,
   },
   section: {
     marginBottom: 32,

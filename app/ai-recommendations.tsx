@@ -14,7 +14,7 @@ import { Stack, useRouter } from 'expo-router';
 import { Sparkles, Send, TrendingUp, Target, DollarSign } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
-import { generateText } from '@rork/toolkit-sdk';
+import { generateText } from '@rork-ai/toolkit-sdk';
 
 interface Recommendation {
   id: string;
