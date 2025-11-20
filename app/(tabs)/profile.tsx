@@ -154,7 +154,10 @@ export default function ProfileScreen() {
           </View>
         ))}
 
-        <TouchableOpacity style={styles.logoutButton}>
+        <TouchableOpacity 
+          style={styles.logoutButton}
+          onPress={() => router.push('/login')}
+        >
           <LogOut size={20} color={Colors.error} />
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
