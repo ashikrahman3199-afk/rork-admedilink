@@ -255,5 +255,5 @@ export const [AppProvider, useApp] = createContextHook(() => {
     isLoggedIn,
     setIsLoggedIn,
     logout,
-  }), [cart, addToCart, removeFromCart, updateCartItemDuration, clearCart, cartTotal, cartItemCount, wishlist, addToWishlist, removeFromWishlist, isInWishlist, campaigns, createCampaign, updateCampaign, deleteCampaign, currentCampaign, bookings, createBooking, updateBooking, paymentMethods, addPaymentMethod, removePaymentMethod, notifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification, unreadNotificationCount, selectedLocation, isLoggedIn, logout]);
+  }), [cart, addToCart, removeFromCart, updateCartItemDuration, clearCart, wishlist, addToWishlist, removeFromWishlist, isInWishlist, campaigns, createCampaign, updateCampaign, deleteCampaign, currentCampaign, bookings, createBooking, updateBooking, paymentMethods, addPaymentMethod, removePaymentMethod, notifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification, selectedLocation, isLoggedIn, logout]);
 });
