@@ -8,8 +8,6 @@ import {
   Image,
   ColorValue,
   Animated,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, router } from 'expo-router';
@@ -21,37 +19,13 @@ import { useApp } from '@/contexts/AppContext';
 export default function CartScreen() {
   const { cart, removeFromCart, updateCartItemDuration, cartTotal, clearCart } = useApp();
   const insets = useSafeAreaInsets();
-  const lastScrollY = useRef(0);
-  const headerTranslateY = useRef(new Animated.Value(0)).current;
-
   const HEADER_HEIGHT = 80;
-
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const currentScrollY = event.nativeEvent.contentOffset.y;
-    const scrollDiff = currentScrollY - lastScrollY.current;
-
-    if (currentScrollY <= 0) {
-      Animated.timing(headerTranslateY, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: true,
-      }).start();
-    } else if (scrollDiff > 2 && currentScrollY > 40) {
-      Animated.timing(headerTranslateY, {
-        toValue: -(HEADER_HEIGHT + insets.top + 24),
-        duration: 250,
-        useNativeDriver: true,
-      }).start();
-    } else if (scrollDiff < -2) {
-      Animated.timing(headerTranslateY, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: true,
-      }).start();
-    }
-
-    lastScrollY.current = currentScrollY;
-  };
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const headerTranslateY = scrollY.interpolate({
+    inputRange: [0, HEADER_HEIGHT],
+    outputRange: [0, -(HEADER_HEIGHT + insets.top + 24)],
+    extrapolate: 'clamp',
+  });
 
   if (cart.length === 0) {
     return (
@@ -84,7 +58,10 @@ export default function CartScreen() {
         style={styles.content}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.contentContainer, { paddingTop: HEADER_HEIGHT + insets.top }]}
-        onScroll={handleScroll}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true }
+        )}
         scrollEventThrottle={16}
       >
         <View style={styles.itemsContainer}>

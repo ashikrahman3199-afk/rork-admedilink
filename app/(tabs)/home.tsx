@@ -9,8 +9,6 @@ import {
   Dimensions,
   ColorValue,
   Animated,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -36,13 +34,19 @@ import { useApp } from '@/contexts/AppContext';
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width - 48;
 
+const HEADER_HEIGHT = 180;
+
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { unreadNotificationCount, selectedLocation, addToCart } = useApp();
   const [selectedCategory, setSelectedCategory] = useState<AdCategory | 'all' | 'events'>('all');
-  const lastScrollY = useRef(0);
-  const headerTranslateY = useRef(new Animated.Value(0)).current;
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const headerTranslateY = scrollY.interpolate({
+    inputRange: [0, HEADER_HEIGHT],
+    outputRange: [0, -(HEADER_HEIGHT + insets.top + 10)],
+    extrapolate: 'clamp',
+  });
 
   const filteredSpaces = adSpaces.filter(space => {
     const matchesCategory = selectedCategory === 'all' || space.category === selectedCategory;
@@ -58,35 +62,6 @@ export default function HomeScreen() {
     { id: '4', title: 'Cinema Advertising Package', type: 'Featured', image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&h=600', serviceId: '8' },
   ];
 
-  const HEADER_HEIGHT = 180;
-
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const currentScrollY = event.nativeEvent.contentOffset.y;
-    const scrollDiff = currentScrollY - lastScrollY.current;
-
-    if (currentScrollY <= 0) {
-      Animated.timing(headerTranslateY, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: true,
-      }).start();
-    } else if (scrollDiff > 2 && currentScrollY > 40) {
-      Animated.timing(headerTranslateY, {
-        toValue: -(HEADER_HEIGHT + insets.top + 10),
-        duration: 250,
-        useNativeDriver: true,
-      }).start();
-    } else if (scrollDiff < -2) {
-      Animated.timing(headerTranslateY, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: true,
-      }).start();
-    }
-
-    lastScrollY.current = currentScrollY;
-  };
-
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -95,7 +70,10 @@ export default function HomeScreen() {
         style={styles.content}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.contentContainer, { paddingTop: HEADER_HEIGHT + insets.top }]}
-        onScroll={handleScroll}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true }
+        )}
         scrollEventThrottle={16}
       >
         <View style={styles.section}>

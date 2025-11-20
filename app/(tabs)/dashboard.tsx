@@ -7,8 +7,6 @@ import {
   TouchableOpacity,
   Dimensions,
   Animated,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { TrendingUp, Eye, Users, Calendar, DollarSign, User, Clock, Heart } from 'lucide-react-native';
@@ -22,8 +20,13 @@ export default function DashboardScreen() {
   const router = useRouter();
   const { bookings } = useApp();
   const insets = useSafeAreaInsets();
-  const lastScrollY = useRef(0);
-  const headerTranslateY = useRef(new Animated.Value(0)).current;
+  const HEADER_HEIGHT = 80;
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const headerTranslateY = scrollY.interpolate({
+    inputRange: [0, HEADER_HEIGHT],
+    outputRange: [0, -(HEADER_HEIGHT + insets.top + 24)],
+    extrapolate: 'clamp',
+  });
 
   const recentBookings = bookings.slice(0, 3);
 
@@ -54,34 +57,7 @@ export default function DashboardScreen() {
     }
   };
 
-  const HEADER_HEIGHT = 80;
 
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const currentScrollY = event.nativeEvent.contentOffset.y;
-    const scrollDiff = currentScrollY - lastScrollY.current;
-
-    if (currentScrollY <= 0) {
-      Animated.timing(headerTranslateY, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: true,
-      }).start();
-    } else if (scrollDiff > 2 && currentScrollY > 40) {
-      Animated.timing(headerTranslateY, {
-        toValue: -(HEADER_HEIGHT + insets.top + 24),
-        duration: 250,
-        useNativeDriver: true,
-      }).start();
-    } else if (scrollDiff < -2) {
-      Animated.timing(headerTranslateY, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: true,
-      }).start();
-    }
-
-    lastScrollY.current = currentScrollY;
-  };
 
   return (
     <View style={styles.container}>
@@ -117,7 +93,10 @@ export default function DashboardScreen() {
         style={styles.content}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentContainer}
-        onScroll={handleScroll}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true }
+        )}
         scrollEventThrottle={16}
       >
         <View style={styles.section}>

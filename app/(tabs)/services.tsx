@@ -10,8 +10,6 @@ import {
   ColorValue,
   Modal,
   Animated,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
 } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -36,6 +34,7 @@ import { adSpaces, categories, AdCategory } from '@/constants/adSpaces';
 import { useApp } from '@/contexts/AppContext';
 
 const { width } = Dimensions.get('window');
+const HEADER_HEIGHT = 180;
 
 export default function ServicesScreen() {
   const router = useRouter();
@@ -47,8 +46,12 @@ export default function ServicesScreen() {
   const [showFilters, setShowFilters] = useState(false);
   const [priceRange, setPriceRange] = useState<'all' | 'low' | 'medium' | 'high'>('all');
   const [ratingFilter, setRatingFilter] = useState<number>(0);
-  const lastScrollY = useRef(0);
-  const headerTranslateY = useRef(new Animated.Value(0)).current;
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const headerTranslateY = scrollY.interpolate({
+    inputRange: [0, HEADER_HEIGHT],
+    outputRange: [0, -(HEADER_HEIGHT + insets.top + 10)],
+    extrapolate: 'clamp',
+  });
 
   useEffect(() => {
     if (params.category && typeof params.category === 'string') {
@@ -69,35 +72,6 @@ export default function ServicesScreen() {
     return matchesCategory && matchesPrice && matchesRating;
   });
 
-  const HEADER_HEIGHT = 180;
-
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const currentScrollY = event.nativeEvent.contentOffset.y;
-    const scrollDiff = currentScrollY - lastScrollY.current;
-
-    if (currentScrollY <= 0) {
-      Animated.timing(headerTranslateY, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: true,
-      }).start();
-    } else if (scrollDiff > 2 && currentScrollY > 40) {
-      Animated.timing(headerTranslateY, {
-        toValue: -(HEADER_HEIGHT + insets.top + 10),
-        duration: 250,
-        useNativeDriver: true,
-      }).start();
-    } else if (scrollDiff < -2) {
-      Animated.timing(headerTranslateY, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: true,
-      }).start();
-    }
-
-    lastScrollY.current = currentScrollY;
-  };
-
   const categoryIcons = {
     billboards: Monitor,
     print: Newspaper,
@@ -115,7 +89,10 @@ export default function ServicesScreen() {
         style={styles.content}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.contentContainer, { paddingTop: HEADER_HEIGHT + insets.top }]}
-        onScroll={handleScroll}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true }
+        )}
         scrollEventThrottle={16}
       >
         <View style={styles.section}>
