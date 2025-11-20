@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -40,7 +40,7 @@ const HEADER_HEIGHT = 200;
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { unreadNotificationCount, selectedLocation, addToCart, clearCart } = useApp();
+  const { unreadNotificationCount, selectedLocation, addToCart } = useApp();
   const [selectedCategory, setSelectedCategory] = useState<AdCategory | 'all' | 'events'>('all');
   const scrollY = useRef(new Animated.Value(0)).current;
   const headerTranslateY = scrollY.interpolate({
@@ -63,9 +63,7 @@ export default function HomeScreen() {
     })
   ).current;
 
-  useEffect(() => {
-    clearCart();
-  }, [clearCart]);
+
 
   const filteredSpaces = adSpaces.filter(space => {
     const matchesCategory = selectedCategory === 'all' || space.category === selectedCategory;

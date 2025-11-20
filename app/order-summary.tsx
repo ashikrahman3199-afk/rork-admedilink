@@ -308,6 +308,7 @@ export default function OrderSummaryScreen() {
                 style={styles.callbackConfirmButton}
                 onPress={() => {
                   setShowCallbackModal(false);
+                  clearCart();
                   router.push('/(tabs)/home');
                 }}
               >
