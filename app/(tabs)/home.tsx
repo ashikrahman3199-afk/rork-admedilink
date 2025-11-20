@@ -384,7 +384,7 @@ export default function HomeScreen() {
                 <Sparkles size={22} color={Colors.text.inverse} />
               </TouchableOpacity>
               <TouchableOpacity 
-                style={styles.iconButton}
+                style={styles.notificationButton}
                 onPress={() => router.push('/notifications')}
               >
                 <Bell size={22} color={Colors.text.inverse} />
@@ -440,6 +440,12 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notificationButton: {
+    width: 40,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
   },
