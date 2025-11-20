@@ -419,11 +419,11 @@ export default function HomeScreen() {
             ],
           },
         ]}
-        {...aiFabPanResponder.panHandlers}
       >
         <TouchableOpacity
           onPress={() => router.push('/ai-recommendations')}
           activeOpacity={0.8}
+          {...aiFabPanResponder.panHandlers}
         >
           <LinearGradient
             colors={['#8B5CF6', '#6366F1'] as unknown as readonly [ColorValue, ColorValue, ...ColorValue[]]}

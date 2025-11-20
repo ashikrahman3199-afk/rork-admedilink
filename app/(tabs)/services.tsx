@@ -212,11 +212,11 @@ export default function ServicesScreen() {
             ],
           },
         ]}
-        {...categoryFabPanResponder.panHandlers}
       >
         <TouchableOpacity
           onPress={() => setShowCategoryMenu(true)}
           activeOpacity={0.8}
+          {...categoryFabPanResponder.panHandlers}
         >
           <LinearGradient
             colors={Colors.gradient.primary as unknown as readonly [ColorValue, ColorValue, ...ColorValue[]]}

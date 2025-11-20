@@ -45,7 +45,6 @@ export default function OrderSummaryScreen() {
         services: cart.map(item => item.title),
         items: cart,
       });
-      clearCart();
       Alert.alert(
         'Request Sent!',
         'Our team will review your package and contact you shortly with final pricing and next steps.',
