@@ -30,7 +30,7 @@ import Colors from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 
 export default function ProfileScreen() {
-  const { campaigns } = useApp();
+  const { campaigns, logout } = useApp();
   const insets = useSafeAreaInsets();
 
   const activeCampaigns = campaigns.filter(c => c.status === 'active').length;
@@ -154,7 +154,13 @@ export default function ProfileScreen() {
           </View>
         ))}
 
-        <TouchableOpacity style={styles.logoutButton}>
+        <TouchableOpacity 
+          style={styles.logoutButton}
+          onPress={() => {
+            logout();
+            router.replace('/login');
+          }}
+        >
           <LogOut size={20} color={Colors.error} />
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
