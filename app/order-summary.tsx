@@ -25,6 +25,7 @@ export default function OrderSummaryScreen() {
   const { cart, cartTotal, createBooking, clearCart } = useApp();
   const [paymentOption, setPaymentOption] = useState<'callback' | 'advance' | null>(null);
   const [showDisclaimerModal, setShowDisclaimerModal] = useState(false);
+  const [showCallbackModal, setShowCallbackModal] = useState(false);
 
   const totalAmount = Math.round(cartTotal * 1.23);
   const advanceAmount = Math.round(cartTotal * 0.1);
@@ -45,17 +46,7 @@ export default function OrderSummaryScreen() {
         services: cart.map(item => item.title),
         items: cart,
       });
-      Alert.alert(
-        'Request Sent!',
-        'Our team will review your package and contact you shortly with final pricing and next steps.',
-        [{ 
-          text: 'OK', 
-          onPress: () => {
-            clearCart();
-            router.push('/(tabs)/dashboard');
-          }
-        }]
-      );
+      setShowCallbackModal(true);
     } else if (paymentOption === 'advance') {
       setShowDisclaimerModal(true);
     }
@@ -281,6 +272,44 @@ export default function OrderSummaryScreen() {
                   style={styles.disclaimerConfirmGradient}
                 >
                   <Text style={styles.disclaimerConfirmText}>I Understand, Continue</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showCallbackModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowCallbackModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.callbackModal}>
+            <View style={styles.callbackModalContent}>
+              <View style={styles.callbackIconContainer}>
+                <Text style={styles.callbackIcon}>✓</Text>
+              </View>
+              <Text style={styles.callbackModalTitle}>Request Sent!</Text>
+              <Text style={styles.callbackModalMessage}>
+                Relax you will get a call from our team
+              </Text>
+            </View>
+
+            <View style={styles.callbackModalActions}>
+              <TouchableOpacity
+                style={styles.callbackConfirmButton}
+                onPress={() => {
+                  setShowCallbackModal(false);
+                  router.push('/bookings');
+                }}
+              >
+                <LinearGradient
+                  colors={Colors.gradient.primary as unknown as readonly [ColorValue, ColorValue, ...ColorValue[]]}
+                  style={styles.callbackConfirmGradient}
+                >
+                  <Text style={styles.callbackConfirmText}>View Bookings</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
@@ -595,6 +624,62 @@ const styles = StyleSheet.create({
   },
   disclaimerConfirmText: {
     fontSize: 15,
+    fontWeight: '700' as const,
+    color: Colors.text.inverse,
+  },
+  callbackModal: {
+    backgroundColor: Colors.surface,
+    borderRadius: 24,
+    width: '100%',
+    maxWidth: 400,
+    ...Colors.shadow.large,
+  },
+  callbackModalContent: {
+    padding: 40,
+    alignItems: 'center',
+  },
+  callbackIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: `${Colors.primary}15`,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  callbackIcon: {
+    fontSize: 40,
+    fontWeight: '700' as const,
+    color: Colors.primary,
+  },
+  callbackModalTitle: {
+    fontSize: 22,
+    fontWeight: '700' as const,
+    color: Colors.text.primary,
+    marginBottom: 12,
+    textAlign: 'center' as const,
+  },
+  callbackModalMessage: {
+    fontSize: 16,
+    color: Colors.text.secondary,
+    textAlign: 'center' as const,
+    lineHeight: 24,
+  },
+  callbackModalActions: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border.light,
+  },
+  callbackConfirmButton: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  callbackConfirmGradient: {
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  callbackConfirmText: {
+    fontSize: 16,
     fontWeight: '700' as const,
     color: Colors.text.inverse,
   },
